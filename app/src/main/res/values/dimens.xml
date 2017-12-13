@@ -1,0 +1,24 @@
+<resources>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">36dp</dimen>
+    <dimen name="login_button_margin">46dp</dimen>
+    <dimen name="left_horizontal_spacing">12dp</dimen>
+    <dimen name="right_horizontal_spacing">10dp</dimen>
+    <dimen name="login_horizontal_pading">15dp</dimen>
+    <dimen name="login_horizontal_margin">20dp</dimen>
+    <dimen name="nav_header_height">176dp</dimen>
+    <dimen name="welfare_item_width">540dp</dimen>
+    <dimen name="welfare_item_heigh">640dp</dimen>
+    <dimen name="fab_margin">16dp</dimen>
+    <dimen name="tabIndicatorHeight">4dp</dimen>
+    <dimen name="image_margin">3dp</dimen>
+    <dimen name="login_vertical_margin">80dp</dimen>
+    <dimen name="login_symbol_heigh">60dp</dimen>
+    <dimen name="login_input_margin">18dp</dimen>
+    <dimen name="fab_size">5dp</dimen>
+    <dimen name="text_size">20sp</dimen>
+    <dimen name="btn_frag_margin">10dp</dimen>
+    <dimen name="textExtra_margin">10dp</dimen>
+    <dimen name="evevation">0dp</dimen>
+</resources>

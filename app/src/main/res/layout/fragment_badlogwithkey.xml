@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <EditText
+        android:id="@+id/edit_keyboardShow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="@dimen/activity_horizontal_margin"
+        android:gravity="center_horizontal"
+        android:hint="@string/badLogCode"
+        android:inputType="text"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:textColor="@color/holo_circle"
+        android:focusableInTouchMode="true"
+        android:focusable="true"
+        app:layout_constraintHorizontal_bias="0.1"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@+id/btn_submit_keyFrag" />
+
+    <ImageButton
+        android:id="@+id/btn_submit_keyFrag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/right_horizontal_spacing"
+        android:layout_marginRight="@dimen/right_horizontal_spacing"
+        android:src="@mipmap/ic_submit_src"
+        android:visibility="gone"
+        style="@style/Widget.AppCompat.Button.Borderless"
+        app:layout_constraintHorizontal_bias="0.1"
+        app:layout_constraintLeft_toRightOf="@+id/edit_keyboardShow"
+        app:layout_constraintRight_toRightOf="parent"/>
+    <!--<include-->
+        <!--layout="@layout/include_keyboardview"-->
+        <!--app:layout_constraintTop_toBottomOf="@+id/edit_keyboardShow"-->
+        <!--app:layout_constraintBottom_toBottomOf="parent"-->
+        <!--android:layout_marginTop="@dimen/activity_vertical_margin"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--/>-->
+</android.support.constraint.ConstraintLayout>

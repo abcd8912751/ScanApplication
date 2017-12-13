@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+       <declare-styleable name="MarkerView">
+            <attr name="defaultColor" format="color"/>
+            <attr name="middleColor" format="color"/>
+            <attr name="overColor" format="color"/>
+            <attr name="mid_Threshold" format="integer"></attr>
+            <attr name="over_Threshold" format="integer"></attr>
+            <attr name="buttonTitle" format="string"></attr>
+       </declare-styleable>
+
+</resources>

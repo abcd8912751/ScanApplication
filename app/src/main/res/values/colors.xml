@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="colorNegative">#52ade7</color>
+    <color name="tabIndicatorColor">#8ae4d6</color>
+    <color name="middleColor">#ea6f5a</color>
+    <color name="colorBacktint">#FCD0DB</color>
+    <color name="imageIndexBorder">#daa447</color>
+    <color name="holo_white">#ff00BCDC</color>
+    <color name="white">#FFFFFF</color>
+    <color name="over_color">#FFD8433C</color>
+    <color name="holo_circle">#ffcc33cc</color>
+    <color name="holo_text">#ff0f82f6</color>
+    <color name="holo_purple">#ff00ff00</color>
+    <color name="holo_title">#ff87c9ef</color>
+    <color name="colorBasic">#f02196f3</color>
+    <color name="colorBottomBg">#ffA5A5A5</color>
+    <color name="colorAccentQuarter">#FF00E5FF</color>
+    <color name="primary_text">#fff2f3f3</color>
+    <color name="icons">#FFFFFF</color>
+    <color name="divider">#BDBDBD</color>
+    <color name="color_input_hint">#d7dff6</color>
+    <color name="btn_bgcolor">#8edda6</color>
+    <color name="colorClarity">#00000000</color>
+    <color name="roller_bg">#808080</color>
+    <color name="btn_login_bg">#23cdde</color>
+    <color name="key_ok_color">#1280FA</color>
+    <color name="btn_switchoperator_bg">#4773e0</color>
+    <color name="key_ok_color_pressed">#0174f2</color>
+    <array name="progress_colors_light">
+        <item>#FF03A9F4</item>
+        <item>#FFD8433C</item>
+        <item>#FFF2AF3A</item>
+        <item>#FF279B5E</item>
+    </array>
+
+    <array name="progress_colors_dark">
+        <item>#FF00E5FF</item>
+        <item>#ffd81d5a</item>
+        <item>#fff27512</item>
+        <item>#ff63bc34</item>
+    </array>
+
+    <array name="in_colors_light">
+        <item>#4B03A9F4</item>
+        <item>#3303A9F4</item>
+        <item>#1903A9F4</item>
+    </array>
+
+    <array name="in_colors_dark">
+        <item>#4B00E5FF</item>
+        <item>#3300E5FF</item>
+        <item>#1900E5FF</item>
+    </array>
+</resources>
+

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@mipmap/ic_login_bg">
+    <ImageView
+        android:id="@+id/image_setting_splash"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:srcCompat="@mipmap/icon_setting_splash"
+        android:layout_marginTop="@dimen/login_button_margin"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"/>
+    <TextView
+        android:id="@+id/splash_operatorLabel"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:gravity="center"
+        android:text="@string/update_config"
+        android:textColor="@color/primary_text"
+        app:layout_constraintTop_toBottomOf="@+id/image_setting_splash"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+    <Button
+        android:id="@+id/splash_startLoginBtn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/login_button_margin"
+        android:layout_marginLeft="@dimen/login_horizontal_margin"
+        android:layout_marginRight="@dimen/login_horizontal_margin"
+        android:gravity="center_horizontal"
+        android:visibility="gone"
+        android:text="@string/login_preference_label"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/splash_operatorLabel"
+        style="@style/ButtonLogin"/>
+    <Button
+        android:id="@+id/splash_switchOperatorBtn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/login_button_margin"
+        android:layout_marginLeft="@dimen/login_horizontal_margin"
+        android:layout_marginRight="@dimen/login_horizontal_margin"
+        android:gravity="center_horizontal"
+        android:text="@string/switchLogin__button_label"
+        android:visibility="gone"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/splash_startLoginBtn"
+        style="@style/ButtonSwithOperator"/>
+
+
+</android.support.constraint.ConstraintLayout>
