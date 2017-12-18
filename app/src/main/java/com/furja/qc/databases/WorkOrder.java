@@ -154,7 +154,7 @@ public class WorkOrder {
     public List<String> toStringList()
     {
         List<String> result=new ArrayList<String>();
-        SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd");
         result.add(""+getMaterielID());
         result.add(getMaterielName());
         result.add(getNorms());

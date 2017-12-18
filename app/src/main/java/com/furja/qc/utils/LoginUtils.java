@@ -68,7 +68,8 @@ public class LoginUtils {
                     {
                         if(loginInfo==null)
                             return false;   //为空
-                        if(loginInfo.contains("false"))
+                        if(loginInfo.contains("false")
+                                ||loginInfo.contains("not"))
                             return false;
                         else
                             return true;

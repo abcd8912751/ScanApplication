@@ -49,6 +49,8 @@ public class LogBadWithBtnFragment extends BaseFragment implements LogBadWithBnC
         markerRecyclerView.setLayoutManager(new GridLayoutManager(mContext,4));
         mBadLogWithBtnPresenter =new BadLogWithBtnPresenter(this);
         notifyInitFinish();
+
+
         return view;
     }
 

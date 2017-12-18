@@ -10,12 +10,12 @@
         android:id="@+id/imageLinear_symbol"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/login_vertical_margin"
+        android:layout_marginBottom="@dimen/login_symbol_heigh"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/edit_login_operator">
         <ImageView
-            android:layout_marginTop="@dimen/login_symbol_heigh"
+            android:layout_marginTop="@dimen/login_button_margin"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:srcCompat="@mipmap/ic_qc_symbol"

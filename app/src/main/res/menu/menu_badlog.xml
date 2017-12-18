@@ -8,10 +8,16 @@
         android:orderInCategory="100"
         android:title="@string/action_logOut"
         app:showAsAction="never" />
-    <!--<item-->
-        <!--android:id="@+id/action_switchScene"-->
-        <!--android:icon="@mipmap/ic_switch_src"-->
-        <!--android:orderInCategory="100"-->
-        <!--android:title="@string/action_switchScene"-->
-        <!--app:showAsAction="never" />-->
+    <item
+        android:id="@+id/action_switchScene"
+        android:icon="@mipmap/ic_switch_src"
+        android:orderInCategory="100"
+        android:title="@string/action_switchScene"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_resetConfig"
+        android:icon="@mipmap/ic_switch_src"
+        android:orderInCategory="100"
+        android:title="@string/action_resetConfig"
+        app:showAsAction="never" />
 </menu>

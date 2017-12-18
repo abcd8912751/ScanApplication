@@ -90,7 +90,8 @@ public class LoginActivity extends AppCompatActivity {
         autoLogin_switch.setChecked(Preferences.isAutoLogin());
 
         //设置注塑车间工作场景
-        Preferences.saveSourceType(TYPE_BADLOG_WITHBTN+"");
+//        Preferences.saveSourceType(TYPE_BADLOG_WITHKEY+"");
+//        Preferences.saveSourceType(TYPE_BADLOG_WITHBTN+"");
 //        switchToLogBad();
     }
 

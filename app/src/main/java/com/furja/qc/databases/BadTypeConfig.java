@@ -1,6 +1,6 @@
 package com.furja.qc.databases;
 
-import com.furja.qc.QcApplication;
+import com.furja.qc.utils.Constants;
 
 
 import org.greenrobot.greendao.annotation.Entity;
@@ -111,11 +111,15 @@ public class BadTypeConfig {
         }
         myDao.update(this);
     }
+    @Keep
+    public String toString()
+    {
+        return badTypeCode+ Constants.INTER_SPLIT +typeDesp;
+    }
     /** called by internal mechanisms, do not call yourself. */
     @Generated(hash = 120303353)
     public void __setDaoSession(DaoSession daoSession) {
         this.daoSession = daoSession;
         myDao = daoSession != null ? daoSession.getBadTypeConfigDao() : null;
     }
-
 }

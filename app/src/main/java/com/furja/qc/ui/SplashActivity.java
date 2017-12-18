@@ -1,14 +1,8 @@
 package com.furja.qc.ui;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
-import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.support.annotation.Nullable;
-import android.support.annotation.RequiresApi;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
@@ -23,27 +17,19 @@ import com.furja.qc.QcApplication;
 import com.furja.qc.R;
 import com.furja.qc.beans.User;
 import com.furja.qc.beans.Preferences;
-import com.furja.qc.jsonbeans.UploadDataJson;
 import com.furja.qc.services.UploadServices;
 import com.furja.qc.utils.LoginUtils;
 import com.furja.qc.utils.SharpBus;
 import com.furja.qc.utils.Utils;
 
-import java.util.Calendar;
-import java.util.TimeZone;
-import java.util.concurrent.Callable;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Consumer;
-import io.reactivex.schedulers.Schedulers;
 
-import static com.furja.qc.utils.Constants.ALARM_ACTION_ON;
+import static com.furja.qc.utils.Constants.RESET_CONFIG;
 import static com.furja.qc.utils.Constants.SYNCOVER_BADTYPE_CONFIG;
 import static com.furja.qc.utils.Constants.TYPE_BADLOG_EMPTY;
 import static com.furja.qc.utils.Utils.showLog;
@@ -62,27 +48,44 @@ public class SplashActivity extends AppCompatActivity {
     @BindView(R.id.splash_switchOperatorBtn)
     Button switchOperatorBtn;
     int callCount=0;
+    boolean isResetConfig;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
         ButterKnife.bind(this);
 
-        checkFisrtStart();
-
-        if(QcApplication.getUser()!=null)
+        Intent fromIntent=getIntent();
+        isResetConfig =false;
+        if(fromIntent!=null)
         {
-            if(Preferences.getSourceType()!=TYPE_BADLOG_EMPTY)
+            if(!TextUtils.isEmpty(fromIntent.getAction())
+                    &&fromIntent.getAction().equals(RESET_CONFIG))
+                isResetConfig =true;
+        }
+        showLog("isReset:->"+isResetConfig);
+        if(!isResetConfig)
+        {
+            checkFisrtStart();
+            if(QcApplication.getUser()!=null)
             {
-                showLog(getClass()+"阻止不了我去LogBad");
-                toLogBad();
+                if(Preferences.getSourceType()!=TYPE_BADLOG_EMPTY)
+                {
+                    showLog(getClass()+"阻止不了我去LogBad");
+                    toLogBad();
+                }
+            }
+            else
+            {
+                Intent intent=new Intent(this, UploadServices.class);
+                startService(intent);
+                showLog("启动上传服务");
+                syncLogConfigAndLogin();
             }
         }
         else
         {
-            Intent intent=new Intent(this, UploadServices.class);
-            startService(intent);
-            showLog("启动上传服务");
+            showLog("重置配置");
             syncLogConfigAndLogin();
         }
 
@@ -109,6 +112,7 @@ public class SplashActivity extends AppCompatActivity {
     private void syncLogConfigAndLogin() {
         rotateSettingImage();
         SharpBus.getInstance().register(SYNCOVER_BADTYPE_CONFIG)
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<Object>() {
                     @Override
                     public void onSubscribe(Disposable d) {
@@ -120,6 +124,7 @@ public class SplashActivity extends AppCompatActivity {
                         showLog(getClass()+"->"+value.toString());
                         if(value.toString().contains("true"))
                         {
+                            callCount=0;
                             image_Setting.clearAnimation();
                             loadingLabel.setVisibility(View.GONE);
                             switchToLogin();
@@ -128,7 +133,7 @@ public class SplashActivity extends AppCompatActivity {
                         {
                             callCount++;
                             if(callCount<3)
-                                Utils.syncBadTypeConfig();
+                                Utils.syncBadTypeConfig(isResetConfig);
                             else
                             {
                                 image_Setting.clearAnimation();
@@ -148,7 +153,7 @@ public class SplashActivity extends AppCompatActivity {
 
                     }
                 });
-        Utils.syncBadTypeConfig();
+        Utils.syncBadTypeConfig(isResetConfig);
     }
 
     /**
@@ -159,7 +164,6 @@ public class SplashActivity extends AppCompatActivity {
         if (circle_anim != null) {
             image_Setting.startAnimation(circle_anim);  //开始动画
         }
-
     }
 
     @OnClick({R.id.splash_switchOperatorBtn,R.id.splash_startLoginBtn})
@@ -209,7 +213,8 @@ public class SplashActivity extends AppCompatActivity {
      * 跳转页面登录
      */
     private void switchToLogin() {
-        Intent intent=new Intent(SplashActivity.this, LoginActivity.class);
+        Intent intent
+                =new Intent(SplashActivity.this, LoginActivity.class);
         startActivity(intent);
         finish();
     }

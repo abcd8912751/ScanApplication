@@ -23,7 +23,7 @@ public class UploadServices extends Service{
     @Override
     public int onStartCommand(Intent intent, int flags,int startId) {
         showLog("上传数据");
-        Utils.toUpload();
+        Utils.toUploadBackground();
         return super.onStartCommand(intent, flags, startId);
     }
 }

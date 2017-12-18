@@ -25,6 +25,8 @@ public interface WorkOrderContract {
         void requestFocus();
 
         void clearFocus();
+
+        void onBackPress();
     }
 
     interface Presenter {

@@ -47,13 +47,13 @@ public class MyViewHolder {
 
     public boolean onTouch(MotionEvent event)
     {
-        if (info_content.getCompoundDrawables()[2] == null)
-            return false;
-        if (event.getAction() != MotionEvent.ACTION_UP)
-            return false;
+        if(getContent().length()>0&&info_content.isClickable())
+            info_content.addClearButton();
+
         if (event.getX() > info_content.getWidth() - info_content.getPaddingRight() - info_content.getIntrinsicWidth()) {
             info_content.setText("");
             info_content.removeClearButton();
+            return true;
         }
         return false;
     }
@@ -68,10 +68,7 @@ public class MyViewHolder {
     public void requestFocus()
     {
         info_content.requestFocus();
-        InputMethodManager imm =
-                (InputMethodManager)info_content.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-//        if(imm!=null)
-//            imm.showSoftInput(info_content, 0);
+
     }
 
     public void clearFocus()
@@ -85,6 +82,7 @@ public class MyViewHolder {
     }
     public void hideKeyBoard()
     {
+        showLog("触发了我隐藏软键盘的想法");
         InputMethodManager imm = (InputMethodManager)info_content.getContext() .getSystemService(Context.INPUT_METHOD_SERVICE);
         if(imm!=null&&imm.isActive())
             imm.hideSoftInputFromWindow(info_content.getWindowToken(), 0);
@@ -106,6 +104,7 @@ public class MyViewHolder {
 
     public void setInfo_content(String content)
     {
+
         info_content.setText(content);
     }
 
@@ -139,15 +138,13 @@ public class MyViewHolder {
         if(position==currPosition)
         {
             requestFocus();
-            if(!info_content.isAdded&&getContent().length()>0)
+            if(getContent().length()>0)
                 info_content.addClearButton();
             info_content.setSelection(info_content.getText().length());
         }
         else
         {
             info_content.clearFocus();
-            if(currPosition<0)
-                hideKeyBoard();
             info_content.removeClearButton();
         }
     }

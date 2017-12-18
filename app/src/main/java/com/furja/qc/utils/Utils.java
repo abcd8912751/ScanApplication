@@ -1,6 +1,8 @@
 package com.furja.qc.utils;
 
 import android.content.Context;
+import android.os.Looper;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -19,6 +21,7 @@ import com.zhy.http.okhttp.callback.StringCallback;
 import org.greenrobot.greendao.query.QueryBuilder;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -42,15 +45,21 @@ public class Utils {
         Log.i(LOG_TAG,msg);
     }
 
-    public static void showToast(String msg)
+    public static void showToast(final String msg)
     {
+        new Thread(){
+            public void run(){
+                try {
+                    Looper.prepare();
+                    Context context= QcApplication.getContext();
+                    Toast.makeText(context,msg,Toast.LENGTH_SHORT).show();
+                    Looper.loop();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
 
-        try {
-            Context context= QcApplication.getContext();
-            Toast.makeText(context,msg,Toast.LENGTH_SHORT).show();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -80,9 +89,24 @@ public class Utils {
      * 同步本地异常类型至本地数据库
      * fromTag为请求同步的界面提供的Tag
      */
-    public static void syncBadTypeConfig()
+    public static void syncBadTypeConfig(final boolean isReset)
     {
         String getBadtypeUrl=FURIA_BADTYPEBASIC_URL;
+        final DaoSession daoSession=QcApplication.getDaoSession();
+        final BadTypeConfigDao typeConfigDao=daoSession.getBadTypeConfigDao();
+
+        if(isReset)
+            typeConfigDao.deleteAll();
+        else
+        {
+            List<BadTypeConfig> configs=
+                    typeConfigDao.loadAll();
+            if(configs!=null&&configs.size()>0)
+            {
+                SharpBus.getInstance().post(SYNCOVER_BADTYPE_CONFIG,true);
+                return;
+            }
+        }
         OkHttpUtils
                 .get()
                 .url(getBadtypeUrl)
@@ -100,23 +124,27 @@ public class Utils {
                                 = JSON.parseObject(responce,BadTypeConfigJson.class);
                         if(badTypeConfigJson.getErrCode()!=110)
                         {
-                            DaoSession daoSession=QcApplication.getDaoSession();
-                            BadTypeConfigDao typeConfigDao=daoSession.getBadTypeConfigDao();
-                            typeConfigDao.deleteAll();
-                            for(ErrDataBean configBean:badTypeConfigJson.getErrData())
-                            {
-                                if(configBean.getSourceType()==1)
-                                {
-                                    BadTypeConfig config=
-                                            new BadTypeConfig(null,configBean.getSourceType(),configBean.getBadTypeID()+"",configBean.getBadTypeDetail());
-                                    typeConfigDao.insertOrReplace(config);
-                                }
-                            }
-                            SharpBus.getInstance().post(SYNCOVER_BADTYPE_CONFIG,true);
+                            Observable.just(badTypeConfigJson.getErrData())
+                                    .observeOn(Schedulers.io())
+                                    .subscribe(new Consumer<List<ErrDataBean>>() {
+                                        @Override
+                                        public void accept(List<ErrDataBean> errDataBeans) throws Exception {
+                                            for(ErrDataBean configBean:errDataBeans)
+                                            {
+                                                BadTypeConfig config=
+                                                        new BadTypeConfig((long) configBean.getBadTypeID(),configBean.getSourceType(),configBean.getBadTypeInfo()+"",configBean.getBadTypeDetail());
+                                                typeConfigDao.insertOrReplace(config);
+                                            }
+                                            SharpBus.getInstance().post(SYNCOVER_BADTYPE_CONFIG,true);
+                                        }
+                                    });
                         }
                     }
                 });
     }
+
+
+
 
     /**
      * 上传数据使用
@@ -134,8 +162,6 @@ public class Utils {
                     .subscribe(new Consumer<List<BadMaterialLog>>() {
                         @Override
                         public void accept(List<BadMaterialLog> badMaterialLogs) throws Exception {
-                            if(badMaterialLogs.size()>0)
-                                showToast("正在上传数据");
                             for(BadMaterialLog badLog: badMaterialLogs)
                             {
                                 badLog.uploadToRemote();
@@ -148,6 +174,34 @@ public class Utils {
     }
 
     /**
+     * 后台上传数据使用
+     */
+    public static void toUploadBackground()
+    {
+        try {
+            Observable.fromCallable(new Callable<List<BadMaterialLog>>() {
+                @Override
+                public List<BadMaterialLog> call() throws Exception {
+                    List<BadMaterialLog> badMaterialLogs =queryNotUploadLog();
+                    return badMaterialLogs;
+                }}) .subscribeOn(Schedulers.io())
+                    .observeOn(Schedulers.newThread())
+                    .subscribe(new Consumer<List<BadMaterialLog>>() {
+                        @Override
+                        public void accept(List<BadMaterialLog> badMaterialLogs) throws Exception {
+                            for(BadMaterialLog badLog: badMaterialLogs)
+                            {
+                                badLog.uploadToRemoteBackGround();
+                            }
+                        }
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    /**
      * 从数据索取未上传的Log进行上传
      * @return
      */
@@ -155,15 +209,40 @@ public class Utils {
     {
         DaoSession daoSession= QcApplication.getDaoSession();
         BadMaterialLogDao dao=daoSession.getBadMaterialLogDao();
-        List<BadMaterialLog> badLogs;
+        List<BadMaterialLog> badLogs,
+                uploadLogs=new ArrayList<BadMaterialLog>();
         QueryBuilder queryBuilder=dao.queryBuilder();
-        badLogs =queryBuilder.where
-                (BadMaterialLogDao.Properties.IsUploaded.eq(false))
+        badLogs
+             =queryBuilder.where(BadMaterialLogDao.Properties.IsUploaded.eq(false))
                 .list();
-        showLog("未上传报告的数量:"+badLogs.size());
+        showLog("尚存未上传报告数量:"+badLogs.size());
         if(badLogs!=null)
-            return badLogs;
-        return Collections.EMPTY_LIST;
+        {
+            for(BadMaterialLog badlog:badLogs)
+            {
+                if (badlog.getBadCount() < 1 ||
+                            TextUtils.isEmpty(badlog.getMaterialISN()))
+                    {
+                        delete(badlog);
+                    }
+
+                else
+                    {
+                        uploadLogs.add(badlog);
+                    }
+            }
+        }
+        showLog("待上传的数据条数:"+uploadLogs.size());
+        return uploadLogs;
     }
 
+    public static void delete(BadMaterialLog badMaterialLog) {
+        try {
+            DaoSession daoSession= QcApplication.getDaoSession();
+            BadMaterialLogDao dao=daoSession.getBadMaterialLogDao();
+            dao.delete(badMaterialLog);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

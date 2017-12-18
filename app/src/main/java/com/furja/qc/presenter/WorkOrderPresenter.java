@@ -29,6 +29,7 @@ import com.furja.qc.model.WorkOrderModel;
 import com.furja.qc.utils.SharpBus;
 import com.furja.qc.view.MyViewHolder;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
@@ -36,6 +37,7 @@ import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 
 import static com.furja.qc.utils.Constants.FRAGMENT_ON_TOUCH;
 import static com.furja.qc.utils.Constants.MATERIAL_INTERNET_ABNORMAL;
@@ -54,7 +56,7 @@ public class WorkOrderPresenter implements WorkOrderContract.Presenter {
     private WorkOrderModel mWorkOrderModel;
     private OrderListAdapter mOrderListAdapter;
     private Context mContext;
-    private int requestCounts=0;
+    private int requestCounts=0;    //请求次数
     private int currPosition=0;
     public WorkOrderPresenter(WorkOrderContract.View workOrderView)
     {
@@ -63,6 +65,22 @@ public class WorkOrderPresenter implements WorkOrderContract.Presenter {
         mOrderListAdapter=new OrderListAdapter();
         setListAdapter();
         setListener();
+
+        Observable.fromCallable(new Callable<Object>() {
+            @Override
+            public Object call() throws Exception {
+                Thread.sleep(1000);
+                return "";
+            }})
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<Object>() {
+                    @Override
+                    public void accept(Object o) throws Exception {
+                        mWorkOrderView.setSelection(0);
+                        showLog("延时到了");
+                    }
+                });
     }
 
 
@@ -72,7 +90,6 @@ public class WorkOrderPresenter implements WorkOrderContract.Presenter {
     private void setListener() {
         //注册网络异常的观察者
         registerObserver();
-
         ListView view=mWorkOrderView.getAdapterView();
         if(view==null)
         {
@@ -99,7 +116,6 @@ public class WorkOrderPresenter implements WorkOrderContract.Presenter {
                             mWorkOrderModel.updateWorkOrderByBarCode(mWorkOrderModel.getMaterialBarCode());
                         else
                             showToast("网络连接异常,请重试");
-
                     }
 
                     @Override
@@ -115,6 +131,7 @@ public class WorkOrderPresenter implements WorkOrderContract.Presenter {
         //注册获取物料信息的观察者
         SharpBus.getInstance()
                 .register(UPDATE_WORKORDER_BY_MATERIAL)
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<Object>() {
                     @Override
                     public void onSubscribe(Disposable d) {
@@ -124,6 +141,7 @@ public class WorkOrderPresenter implements WorkOrderContract.Presenter {
                     @Override
                     public void onNext(Object value) {
                         //从服务器获取物料信息后获取响应更新视图
+                        showLog("获取到物料信息");
                         notifyAndUpdateBadData();
                         requestCounts=0;
                     }
@@ -141,6 +159,7 @@ public class WorkOrderPresenter implements WorkOrderContract.Presenter {
         //注册上传成功的观察者
         SharpBus.getInstance()
                 .register(UPLOAD_FINISH)
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<Object>() {
                     @Override
                     public void onSubscribe(Disposable d) {
@@ -151,10 +170,11 @@ public class WorkOrderPresenter implements WorkOrderContract.Presenter {
                     public void onNext(Object value) {
                         currPosition=0; //上传成功后置光标为0
                         mWorkOrderModel.setMaterialNull();
+                        mWorkOrderView.requestFocus();
                         mWorkOrderView.setSelection(0);
+                        showLog("收到了上传完成的指示");
                         if(mOrderListAdapter!=null)
                         {
-                            showLog("上传数据完成");
                             mOrderListAdapter.notifyDataSetChanged();
                         }
                     }
@@ -179,6 +199,9 @@ public class WorkOrderPresenter implements WorkOrderContract.Presenter {
 
                     @Override
                     public void onNext(Object value) {
+                        showLog("我来了"+value.toString());
+                        if(currPosition<0)
+                            return;
                         currPosition=-1;
                         if(mOrderListAdapter!=null)
                             mOrderListAdapter.notifyDataSetChanged();
@@ -294,17 +317,15 @@ public class WorkOrderPresenter implements WorkOrderContract.Presenter {
             {
                 myViewHolder=(MyViewHolder)convertView.getTag();
             }
-            myViewHolder.getEditText().setOnKeyListener(new View.OnKeyListener() {
+            myViewHolder.getEditText()
+                    .setOnKeyListener(new View.OnKeyListener() {
                 @Override
                 public boolean onKey(View view, int i, KeyEvent keyEvent) {
-                    if(keyEvent!=null)
+                    if(keyEvent.getKeyCode()==KeyEvent.KEYCODE_ENTER)
                     {
-                        if(keyEvent.getKeyCode()==KeyEvent.KEYCODE_ENTER)
-                        {
-                            showLog("回车了");
-                            if(myViewHolder.getContent().length()>0)
-                                readInput(position, myViewHolder);
-                        }
+                        showLog("回车了");
+                        if(myViewHolder.getContent().length()>0)
+                            readInput(position, myViewHolder);
                     }
                     return false;
                 }
@@ -314,29 +335,24 @@ public class WorkOrderPresenter implements WorkOrderContract.Presenter {
                 @Override
                 public boolean onTouch(View view, MotionEvent motionEvent) {
                     currPosition=position;
-                    return myViewHolder.onTouch(motionEvent);
+                    if(myViewHolder.onTouch(motionEvent))
+                    {
+                        if(position==4)
+                        {
+                            mWorkOrderModel.updateWorkOrderByOperatorId(myViewHolder.getContent());
+                        }
+                        else if(position==5)
+                        {
+                            mWorkOrderModel.updateWorkOrderByWorkPlaceId(myViewHolder.getContent());
+                        }
+                    }
+                    return false;
                 }
             });
-//            RxView.focusChanges(myViewHolder.getEditText())
-//                    .subscribe(new Consumer<Boolean>() {
-//                        @Override
-//                        public void accept(Boolean aBoolean) throws Exception {
-//                            if(!aBoolean)
-//                            {
-//                                if(position==4)
-//                                {
-//                                    mWorkOrderModel.updateWorkOrderByOperatorId(myViewHolder.getContent());
-//                                }
-//                                if(position==5)
-//                                {
-//                                    mWorkOrderModel.updateWorkOrderByWorkPlaceId(myViewHolder.getContent());
-//                                }
-//                            }
-//                        }
-//                    });
             myViewHolder.getEditText().setOnEditorActionListener(new TextView.OnEditorActionListener() {
                 @Override
                 public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
+                    showLog("编辑了Action");
                     if (i == EditorInfo.IME_ACTION_DONE)
                     {
                         showLog("Done over");
@@ -353,19 +369,34 @@ public class WorkOrderPresenter implements WorkOrderContract.Presenter {
         }
 
         private void readInput(int position, MyViewHolder myViewHolder) {
+            showLog("我进来读数了:"+position);
             if(position==0)
             {
                 myViewHolder.clearFocus();
                 currPosition=4;
-                mWorkOrderView.setSelection(4);
                 updateMaterialCode(myViewHolder.getContent());
+                mWorkOrderView.setSelection(4);
             }
             else if(position==4)
             {
                 myViewHolder.clearFocus();
                 currPosition=5;
-                mWorkOrderView.setSelection(5);
                 updateOperatorId(myViewHolder.getContent());
+                Observable.fromCallable(new Callable<Object>() {
+                    @Override
+                    public Object call() throws Exception {
+                        Thread.sleep(300);
+                        return "finish";
+                    }
+                }).observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(new Consumer<Object>() {
+                            @Override
+                            public void accept(Object o) throws Exception {
+
+                                mWorkOrderView.setSelection(5);
+                            }
+                        });
+
             }
             else if(position==5)
             {
@@ -385,10 +416,9 @@ public class WorkOrderPresenter implements WorkOrderContract.Presenter {
     public void updateMaterialCode(String currContent)
     {
         showLog("你输入的是:"+currContent);
-        if(TextUtils.isEmpty(currContent)
-                ||mWorkOrderModel.getMaterialBarCode().equals(currContent))
+        if(TextUtils.isEmpty(currContent))
         {
-            showLog("条码为空或与上一条码相同");
+            showLog("条码为空");
             return;
         }
         mWorkOrderModel.setMaterialBarCode(currContent);

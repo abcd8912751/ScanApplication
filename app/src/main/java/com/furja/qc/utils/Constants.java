@@ -23,12 +23,13 @@ public class Constants {
     //同步异常类型配置完成后传递此事件
     public static final String SYNCOVER_BADTYPE_CONFIG="freshTheKeyBoardFragment";
     public static final String ALARM_ACTION_ON="ui.splash.alarm";
-
+    public static final String INTER_SPLIT =" -> ";
     //为录入异常数据使用视图的标识,-1为没有设置
     public static final int TYPE_BADLOG_WITHBTN=1;
     public static final int TYPE_BADLOG_WITHKEY=2;
     public static final int TYPE_BADLOG_EMPTY=-1;
     public static final String UPLOAD_FINISH="uploadfinish";
+    public static final String RESET_CONFIG="reset_config";
     public static final String INTERNET_ABNORMAL="网络连接异常";
     public static final String MATERIAL_INTERNET_ABNORMAL="获取物料信息网络连接异常";
     public static final String OPERATOR_LOGIN_ERROR="账号或密码错误";

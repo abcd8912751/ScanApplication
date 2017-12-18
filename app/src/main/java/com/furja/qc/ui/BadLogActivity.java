@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -25,6 +26,8 @@ import com.furja.qc.fragment.LogBadWithBtnFragment;
 import com.furja.qc.fragment.LogBadWithKeyFragment;
 import com.furja.qc.presenter.WorkOrderPresenter;
 import com.furja.qc.utils.SharpBus;
+import com.furja.qc.utils.Utils;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,6 +36,7 @@ import butterknife.ButterKnife;
 import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
 
+import static com.furja.qc.utils.Constants.RESET_CONFIG;
 import static com.furja.qc.utils.Constants.TYPE_BADLOG_EMPTY;
 import static com.furja.qc.utils.Constants.TYPE_BADLOG_WITHKEY;
 import static com.furja.qc.utils.Constants.UPDATE_BAD_COUNT;
@@ -167,7 +171,6 @@ public class BadLogActivity extends AppCompatActivity implements WorkOrderContra
         else
             logBadWithKeyFragment.syncAndUpdateKeyBadData
                     (mWorkOrderPresenter.getWorkOrderInfo());
-
     }
 
     @Override
@@ -183,6 +186,11 @@ public class BadLogActivity extends AppCompatActivity implements WorkOrderContra
     @Override
     public void clearFocus() {
         workinfoList.clearFocus();
+    }
+
+    @Override
+    public void onBackPress() {
+        onBackPressed();
     }
 
     /**
@@ -219,18 +227,38 @@ public class BadLogActivity extends AppCompatActivity implements WorkOrderContra
             syncAndUpdateBadData();
             Preferences.saveAutoLogin(false);
             QcApplication.setUserAndSave(null);
+            toLogin();
         }
-        else
-        {
+        else if(id==R.id.action_switchScene)
+        {   //切换工作场景的
             syncAndUpdateBadData();
             Preferences.saveSourceType(""+TYPE_BADLOG_EMPTY);
+            toLogin();
         }
-        Intent intent=new Intent(this,LoginActivity.class);
-        startActivity(intent);
-        finish();
+        if(id==R.id.action_resetConfig)
+        {
+            syncAndUpdateBadData();
+            Intent intent=new Intent(this,SplashActivity.class);
+            intent.setAction(RESET_CONFIG);
+            startActivity(intent);
+            finish();
+        }
+
         return super.onOptionsItemSelected(item);
     }
 
+    private void toLogin() {
+        Intent intent=new Intent(this,LoginActivity.class);
+        startActivity(intent);
+        finish();
+    }
 
+
+    @Override
+    public void onBackPressed() {
+        showLog("你按了:"+"onBackPressed");
+        syncAndUpdateBadData();
+        super.onBackPressed();
+    }
 
 }

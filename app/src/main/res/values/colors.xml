@@ -4,7 +4,7 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
     <color name="colorNegative">#52ade7</color>
-    <color name="tabIndicatorColor">#8ae4d6</color>
+    <color name="tabIndicatorColor">#b3eae9</color>
     <color name="middleColor">#ea6f5a</color>
     <color name="colorBacktint">#FCD0DB</color>
     <color name="imageIndexBorder">#daa447</color>
@@ -16,7 +16,8 @@
     <color name="holo_purple">#ff00ff00</color>
     <color name="holo_title">#ff87c9ef</color>
     <color name="colorBasic">#f02196f3</color>
-    <color name="colorBottomBg">#ffA5A5A5</color>
+    <color name="colorBottomBg">#FFf5f5f5</color>
+    <color name="transparent">#00000000</color>
     <color name="colorAccentQuarter">#FF00E5FF</color>
     <color name="primary_text">#fff2f3f3</color>
     <color name="icons">#FFFFFF</color>

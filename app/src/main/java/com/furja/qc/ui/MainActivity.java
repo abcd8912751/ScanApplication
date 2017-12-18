@@ -17,19 +17,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        resultView=(TextView)findViewById(R.id.resultView);
-        resultView.setText("点我扫码");
-        resultView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent  intent=new Intent(MainActivity.this,BadLogActivity.class);
-                startActivity(intent);
-            }
-        });
-
 
         toLogBad();
-//        toLogin();
     }
 
     private void toLogin() {
@@ -47,49 +36,11 @@ public class MainActivity extends AppCompatActivity {
         finish();
     }
 
-    /**
-     * 开始扫码
-     */
-    private void scanBarCode()
-    {
-
-//        QRCodeManager.getInstance()
-//                .with(this)
-//                .scanningQRCode(new OnQRCodeScanCallback() {
-//                    @Override
-//                    public void onCompleted(String result) {//扫描成功之后回调，result就是扫描的结果
-//                        showResult(result);
-//                    }
-//
-//                    @Override
-//                    public void onError(Throwable errorMsg) {//扫描出错的时候回调
-//                        showResult(errorMsg.toString());
-//                    }
-//
-//                    @Override
-//                    public void onCancel() {//取消扫描的时候回调
-//                        Toast.makeText(MainActivity.this,"已取消扫码行动",Toast.LENGTH_SHORT).show();
-//                    }
-//                });
-    }
-
-//    private void showResult(String result)
-//    {
-//        if(resultView!=null)
-//            resultView.setText(result);
-//        if(result.contains("http"))
-//        {
-//            Intent intent=new Intent(this,SurfActivity.class);
-//            intent.setData(Uri.parse(result));
-//            startActivity(intent);
-//        }
-//    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-//        QRCodeManager.getInstance().with(this).onActivityResult(requestCode, resultCode, data);
-    }
+   }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

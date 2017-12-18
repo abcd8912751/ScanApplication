@@ -1,9 +1,12 @@
 package com.furja.qc.model;
 
 import android.content.Context;
+import android.text.TextUtils;
+import android.view.KeyEvent;
 
 import com.furja.qc.R;
 import com.furja.qc.QcApplication;
+import com.furja.qc.beans.MaterialInfo;
 import com.furja.qc.databases.BadMaterialLog;
 
 import com.furja.qc.beans.WorkOrderInfo;
@@ -12,7 +15,10 @@ import com.furja.qc.databases.BadMaterialLogDao;
 import com.furja.qc.databases.BadTypeConfig;
 import com.furja.qc.databases.BadTypeConfigDao;
 import com.furja.qc.databases.DaoSession;
+import com.furja.qc.utils.SharpBus;
 import com.furja.qc.utils.Utils;
+import com.zhy.http.okhttp.OkHttpUtils;
+import com.zhy.http.okhttp.callback.StringCallback;
 
 import org.greenrobot.greendao.query.QueryBuilder;
 
@@ -25,8 +31,12 @@ import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
+import okhttp3.Call;
 
+import static com.furja.qc.utils.Constants.FURIA_BARCODEINFO_URL;
+import static com.furja.qc.utils.Constants.MATERIAL_INTERNET_ABNORMAL;
 import static com.furja.qc.utils.Constants.TYPE_BADLOG_WITHBTN;
+import static com.furja.qc.utils.Constants.UPLOAD_FINISH;
 import static com.furja.qc.utils.Utils.showLog;
 import static com.furja.qc.utils.Utils.showToast;
 
@@ -47,6 +57,19 @@ public class LogBadWithBtnModel implements LogBadWithBnContract.Model {
 
         this.btn_titles=titles;
         initArrays();
+    }
+
+    /**
+     * 判断物料代码是否为空
+     * @return
+     */
+    public boolean ISNisNull()
+    {
+        if(badMaterialLog==null)
+            return true;
+        if(TextUtils.isEmpty(badMaterialLog.getMaterialISN()))
+            return true;
+        return false;
     }
 
 
@@ -220,7 +243,10 @@ public class LogBadWithBtnModel implements LogBadWithBnContract.Model {
         this.workOrderInfo = workOrderInfo;
     }
 
-
+    /**
+     * 将当前状态整理成字符串以供备忘录保存
+     * @return
+     */
     public String getMarkCountString() {
         StringBuffer stringBuffer=new StringBuffer();
         for(Long entity:markCounts)
@@ -242,6 +268,48 @@ public class LogBadWithBtnModel implements LogBadWithBnContract.Model {
         markCounts.set(position,count);
         badMaterialLog.setBadCount(getTotalBad());
         badMaterialLog.setLongBadCounts(markCounts);
+
+    }
+
+    public void getMaterialISNbyBarCode(String barCode) {
+        OkHttpUtils
+                .get()
+                .url(FURIA_BARCODEINFO_URL)
+                .addParams("Barcode", barCode)
+                .build()
+                .execute(new StringCallback() {
+
+                    @Override
+                    public void onError(Call call, Exception e, int i) {
+                        SharpBus.getInstance().post(MATERIAL_INTERNET_ABNORMAL,"true");
+                    }
+
+                    @Override
+                    public void onResponse(String response, int i) {
+                        showLog(getClass()+response);
+                        MaterialInfo info = new MaterialInfo();
+                        try {
+                            info.formatJson(response);
+                            if(!TextUtils.isEmpty(info.getMaterialName()))
+                            {
+                                if(badMaterialLog!=null)
+                                {
+                                    badMaterialLog.setMaterialISN(info.getMaterialISN());
+                                    syncData();
+                                    SharpBus.getInstance()
+                                            .post(UPLOAD_FINISH,"unloadFinish");
+                                    clearCount();
+                                }
+                            }
+                        }
+                        catch (Exception e) {
+                            showToast("没有找到物料,需重输");
+                        }
+                        finally {
+
+                        }
+                    }
+                });
 
     }
 }

@@ -1,5 +1,7 @@
 package com.furja.qc.databases;
 
+import android.text.TextUtils;
+
 import com.alibaba.fastjson.JSON;
 import com.furja.qc.QcApplication;
 import com.furja.qc.beans.WorkOrderInfo;
@@ -33,7 +35,9 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 import static com.furja.qc.utils.Constants.FURIA_UPLOAD_URL;
+import static com.furja.qc.utils.Constants.RESET_CONFIG;
 import static com.furja.qc.utils.Utils.showLog;
+import static com.furja.qc.utils.Utils.showToast;
 
 /**
  * GreenDao的品质异常类型基类
@@ -126,6 +130,7 @@ public class BadMaterialLog {
     {
         if(isUploaded)
             return;
+        showLog("只有我一个人在战斗");
         String uploadUrl=FURIA_UPLOAD_URL;
         try {
             Map<String, String> uploadParams = getUploadParams();
@@ -139,20 +144,12 @@ public class BadMaterialLog {
                         @Override
                         public void onError(Call call, Exception e, int i) {
                             e.printStackTrace();
-                            if(i<3)
-                                try {
-                                    if(call.isExecuted())
-                                        call.cancel();
-                                    call.execute();
-                                } catch (Exception e1) {
-                                    e1.printStackTrace();
-                                }
+                            showToast("网络异常,数据已保存");
                         }
 
                         @Override
                         public void onResponse(String responce, int i) {
                             showLog("上传所得信息:"+responce);
-
                             checkUploadSuccessAndSave(responce);
                         }
 
@@ -167,7 +164,61 @@ public class BadMaterialLog {
                             if(uploadDataJson!=null&&uploadDataJson.getErrCode()==100)
                             {
                                 setIsUploaded(true);
+                                showToast("上传成功");
                             }
+                            else
+                            {
+                                showLog(responce+">"+toUploadString());
+                                Utils.saveToLocal(BadMaterialLog.this);
+                            }
+
+                        }
+                    });
+        } catch (Exception e) {
+            showLog("核查url: "+uploadUrl);
+        }
+    }
+
+    @Keep
+    public synchronized void uploadToRemoteBackGround()
+    {
+        if(isUploaded)
+            return;
+        showLog("只有我一个人在战斗");
+        String uploadUrl=FURIA_UPLOAD_URL;
+        try {
+            Map<String, String> uploadParams = getUploadParams();
+            OkHttpUtils
+                    .post()
+                    .url(uploadUrl)
+                    .params(uploadParams)
+                    .build()
+                    .execute(new StringCallback() {
+                        @Override
+                        public void onError(Call call, Exception e, int i) {
+                            e.printStackTrace();
+                        }
+
+                        @Override
+                        public void onResponse(String responce, int i) {
+                            checkUploadSuccessAndSave(responce);
+                        }
+
+                        /**
+                         * 根据返回的Json检验是否上传成功
+                         *  如果上传成功则更新存入本地数据库
+                         *  在网络异常时未上传成功需考虑定时上传
+                         */
+                        private void checkUploadSuccessAndSave(String responce) {
+                            UploadDataJson uploadDataJson
+                                    = JSON.parseObject(responce,UploadDataJson.class);
+                            if(uploadDataJson!=null&&uploadDataJson.getErrCode()==100)
+                            {
+                                setIsUploaded(true);
+                                showLog(responce);
+                            }
+                            else
+                                showLog(responce+">"+toUploadString());
                             Utils.saveToLocal(BadMaterialLog.this);
                         }
                     });

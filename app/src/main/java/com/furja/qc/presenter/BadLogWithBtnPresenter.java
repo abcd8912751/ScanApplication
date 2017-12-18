@@ -2,6 +2,7 @@ package com.furja.qc.presenter;
 
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -10,6 +11,7 @@ import android.support.v7.widget.RecyclerView;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +21,7 @@ import android.widget.NumberPicker;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.furja.qc.QcApplication;
+import com.furja.qc.beans.MaterialInfo;
 import com.furja.qc.databases.BadMaterialLog;
 import com.furja.qc.databases.BadTypeConfig;
 import com.furja.qc.databases.BadTypeConfigDao;
@@ -30,6 +33,8 @@ import com.furja.qc.R;
 import com.furja.qc.beans.WorkOrderInfo;
 import com.furja.qc.contract.LogBadWithBnContract;
 import com.furja.qc.model.LogBadWithBtnModel;
+import com.zhy.http.okhttp.OkHttpUtils;
+import com.zhy.http.okhttp.callback.StringCallback;
 
 import java.util.Collections;
 import java.util.List;
@@ -41,12 +46,18 @@ import butterknife.ButterKnife;
 import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.Subject;
+import okhttp3.Call;
 import q.rorbin.badgeview.QBadgeView;
 
 import static com.furja.qc.utils.Constants.FRAGMENT_ON_TOUCH;
+import static com.furja.qc.utils.Constants.FURIA_BARCODEINFO_URL;
+import static com.furja.qc.utils.Constants.MATERIAL_INTERNET_ABNORMAL;
 import static com.furja.qc.utils.Constants.UPDATE_BAD_COUNT;
+import static com.furja.qc.utils.Constants.UPDATE_WORKORDER_BY_MATERIAL;
 import static com.furja.qc.utils.Constants.UPLOAD_FINISH;
 import static com.furja.qc.utils.Utils.showLog;
 import static com.furja.qc.utils.Utils.showToast;
@@ -65,16 +76,17 @@ public class BadLogWithBtnPresenter implements LogBadWithBnContract.Presenter {
     public BadLogWithBtnPresenter(LogBadWithBnContract.View defectiveView)
     {
         this.mDefectiveView=defectiveView;
+        sharpBus=SharpBus.getInstance();
         setThisModel();
         myRecyclerAdapter=new MyRecyclerAdapter();
         mDefectiveView.setRecyclerAdapter(myRecyclerAdapter);
-        sharpBus=SharpBus.getInstance();
         mDefectiveView.setButtonClickListener(new BtnClickListener());
         caretaker=new Caretaker();
     }
 
     /**
      * 设置 MVP架构下与此作数据交换的Model
+     * 并设定上传成功监听以更新视图
      */
     public void setThisModel()
     {
@@ -84,7 +96,9 @@ public class BadLogWithBtnPresenter implements LogBadWithBnContract.Presenter {
                 DaoSession daoSession=QcApplication.getDaoSession();
                 BadTypeConfigDao typeConfigDao
                         =daoSession.getBadTypeConfigDao();
-                List<BadTypeConfig> allResults=typeConfigDao.loadAll();
+                List<BadTypeConfig> allResults=typeConfigDao.queryBuilder()
+                        .where(BadTypeConfigDao.Properties.SourcType.eq(1))
+                        .list();
                 if(allResults!=null)
                     return allResults;
                 else
@@ -194,6 +208,12 @@ public class BadLogWithBtnPresenter implements LogBadWithBnContract.Presenter {
                     .subscribe(new Consumer<Object>() {
                         @Override
                         public void accept(Object o) throws Exception {
+                            if(mDefectiveModel.ISNisNull())
+                            {
+                                showToast("设置物料代码后方可记录");
+                                sharpBus.post(UPLOAD_FINISH,"ISN is NULL");
+                                return;
+                            }
                             if(isEditing())
                             {
                                 showEditDialog(viewHolder,position);
@@ -219,7 +239,6 @@ public class BadLogWithBtnPresenter implements LogBadWithBnContract.Presenter {
                             showEditDialog(viewHolder,position);
                         }
                     });
-
         }
 
         private void showEditDialog(final LogViewHolder viewHolder,final int position) {
@@ -260,7 +279,7 @@ public class BadLogWithBtnPresenter implements LogBadWithBnContract.Presenter {
     {
         @Override
         public void onClick(View v) {
-
+            sharpBus.post(FRAGMENT_ON_TOUCH,"TOUCH");
             switch (v.getId())
             {
                 //undo按钮
@@ -285,7 +304,6 @@ public class BadLogWithBtnPresenter implements LogBadWithBnContract.Presenter {
                     break;
                 //编辑按钮
                 case R.id.btn_edit_btnFrag:
-
                     try{
                         if(!isEditing)
                         {
@@ -301,15 +319,59 @@ public class BadLogWithBtnPresenter implements LogBadWithBnContract.Presenter {
                     break;
                 //submit按钮、传递上传完成
                 case R.id.btn_submit_btnFrag:
-                    syncData();
-                    showToast("上传数据");
-                    sharpBus.post(UPLOAD_FINISH,"unloadFinish");
-                    mDefectiveModel.clearCount();
-                    myRecyclerAdapter.notifyDataSetChanged();
+                    if(!mDefectiveModel.ISNisNull())
+                    {
+                        syncData();
+                        mDefectiveModel.clearCount();
+                        myRecyclerAdapter.notifyDataSetChanged();
+                    }
+                    else
+                    {
+//                        showReadBarCodeDialog(v);
+                    }
+                    sharpBus.post(UPLOAD_FINISH,UPLOAD_FINISH);
                     break;
             }
         }
     }
+
+    private void showReadBarCodeDialog(View view)
+    {
+        new MaterialDialog.Builder(view.getContext())
+                .title(R.string.materialUpdate)
+                .inputType(InputType.TYPE_CLASS_TEXT)
+                .autoDismiss(false)
+                .input("扫描物料条码","", new MaterialDialog.InputCallback() {
+                    @Override
+                    public void onInput(final MaterialDialog dialog, CharSequence input) {
+                        //刷新视图读取数据
+                        if(TextUtils.isEmpty(input))
+                        {
+                            showToast("需录入信息");
+                        }
+                        else
+                        {
+                            showLog("你输入的是:"+input);
+                            String barcode=input.toString();
+                            mDefectiveModel.getMaterialISNbyBarCode(barcode);
+                            dialog.cancel();
+                        }
+                    }
+                }).keyListener(new DialogInterface.OnKeyListener() {
+            @Override
+            public boolean onKey(DialogInterface dialogInterface, int i, KeyEvent keyEvent) {
+                if(keyEvent!=null)
+                {
+                    if(keyEvent.getKeyCode()== KeyEvent.KEYCODE_ENTER)
+                    {
+                    }
+                }
+                return false;
+            }
+        }).canceledOnTouchOutside(false).show();
+    }
+
+
 
     /**
      * RecyclerView的View装载
@@ -346,11 +408,9 @@ public class BadLogWithBtnPresenter implements LogBadWithBnContract.Presenter {
             if(markNum==0)
             {
                 markerButton.setGravity(Gravity.CENTER);
-//                markerButton.setBackgroundResource(R.drawable.shape_button_badloged);
             }
             else if(markerButton.getGravity()!=(Gravity.LEFT|Gravity.BOTTOM))
             {
-//                markerButton.setBackgroundResource(R.drawable.shape_button_badlog);
                 markerButton.setGravity(Gravity.LEFT|Gravity.BOTTOM);
             }
         }

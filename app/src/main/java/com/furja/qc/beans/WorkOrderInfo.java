@@ -40,4 +40,26 @@ public class WorkOrderInfo {
     public void setMaterialISN(String materialISN) {
         this.materialISN = materialISN;
     }
+
+
+    public boolean equals(WorkOrderInfo obj) {
+        if(obj==null)
+            return false;
+        if(!getMaterialISN().equals(obj.getMaterialISN()))
+            return false;
+        if(!getOperatorId().equals(obj.getOperatorId()))
+            return false;
+        if(!getWorkPlaceId().equals(obj.getWorkPlaceId()))
+            return false;
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return "WorkOrderInfo{" +
+                "materialISN='" + materialISN + '\'' +
+                ", operatorId='" + operatorId + '\'' +
+                ", workPlaceId='" + workPlaceId + '\'' +
+                '}';
+    }
 }

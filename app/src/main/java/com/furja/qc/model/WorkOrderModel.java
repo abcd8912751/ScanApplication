@@ -113,7 +113,7 @@ public class WorkOrderModel implements WorkOrderContract.Model {
      */
     public void setWorkinfoes(List<String> workinfoes) {
         this.workinfoes = workinfoes;
-//        showLog("工单列表信息:"+workinfoes.toString());
+
     }
     @Override
     public String getContent(int position) {
