@@ -68,6 +68,12 @@ public class LogBadWithBtnFragment extends BaseFragment implements LogBadWithBnC
         submit_button.setOnClickListener(buttonClickListener);
     }
 
+    //转移焦点
+    @Override
+    public void changeFocus() {
+        undo_button.performClick();
+    }
+
 
     public void syncAndUpdateBtnBadData(WorkOrderInfo workOrderInfo) {
         if(mBadLogWithBtnPresenter!=null)

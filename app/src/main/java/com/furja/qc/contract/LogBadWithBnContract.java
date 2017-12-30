@@ -22,6 +22,8 @@ public interface LogBadWithBnContract {
     interface View {
         public void setRecyclerAdapter(RecyclerView.Adapter<RecyclerView.ViewHolder> adapter);
         public void setButtonClickListener(android.view.View.OnClickListener buttonClickListener);
+
+        void changeFocus();
     }
 
     interface Presenter {

@@ -164,6 +164,7 @@ public class BadMaterialLog {
                             if(uploadDataJson!=null&&uploadDataJson.getErrCode()==100)
                             {
                                 setIsUploaded(true);
+                                showLog("上传数据成功啦");
                                 showToast("上传成功");
                             }
                             else

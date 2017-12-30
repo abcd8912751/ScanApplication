@@ -45,7 +45,7 @@ import static com.furja.qc.utils.Utils.showLog;
 import static com.furja.qc.utils.Utils.showToast;
 
 /**
- * Created by zhangmeng on 2017/12/3.
+ * 记录异常类型的活动
  */
 
 public class BadLogActivity extends AppCompatActivity implements WorkOrderContract.View {
@@ -243,7 +243,11 @@ public class BadLogActivity extends AppCompatActivity implements WorkOrderContra
             startActivity(intent);
             finish();
         }
-
+//        else if(id==R.id.action_upload)
+//        {
+//
+//
+//        }
         return super.onOptionsItemSelected(item);
     }
 

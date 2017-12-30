@@ -261,7 +261,7 @@ public class WorkOrderModel implements WorkOrderContract.Model {
      */
     public void updateWorkOrderByBarCode(final String barCode)
     {
-        showLog(getClass()+"正在读取物料信息");
+        showLog(getClass()+">正在读取物料信息");
         OkHttpUtils
                 .get()
                 .url(FURIA_BARCODEINFO_URL)
@@ -294,6 +294,8 @@ public class WorkOrderModel implements WorkOrderContract.Model {
                         }
                         catch (Exception e) {
                             showToast("没有找到物料,需重输");
+                            SharpBus.getInstance()
+                                    .post(UPDATE_WORKORDER_BY_MATERIAL,"error");
                         }
                         finally {
 

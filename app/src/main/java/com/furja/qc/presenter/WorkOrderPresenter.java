@@ -38,8 +38,10 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.Subject;
 
 import static com.furja.qc.utils.Constants.FRAGMENT_ON_TOUCH;
+import static com.furja.qc.utils.Constants.INFORMATION_HAS_NUL;
 import static com.furja.qc.utils.Constants.MATERIAL_INTERNET_ABNORMAL;
 import static com.furja.qc.utils.Constants.UPDATE_BAD_COUNT;
 import static com.furja.qc.utils.Constants.UPDATE_WORKORDER_BY_MATERIAL;
@@ -141,8 +143,22 @@ public class WorkOrderPresenter implements WorkOrderContract.Presenter {
                     @Override
                     public void onNext(Object value) {
                         //从服务器获取物料信息后获取响应更新视图
-                        showLog("获取到物料信息");
-                        notifyAndUpdateBadData();
+                        if(value.toString().contains("finish"))
+                        {
+                            showLog("获取到物料信息");
+                            notifyAndUpdateBadData();
+                        }
+                        else
+                        {
+                            currPosition=0;
+                            mWorkOrderModel.setMaterialNull();
+                            mWorkOrderView.requestFocus();
+                            mWorkOrderView.setSelection(currPosition);
+                            if(mOrderListAdapter!=null)
+                            {
+                                mOrderListAdapter.notifyDataSetChanged();
+                            }
+                        }
                         requestCounts=0;
                     }
 
@@ -156,6 +172,39 @@ public class WorkOrderPresenter implements WorkOrderContract.Presenter {
 
                     }
                 });
+
+        SharpBus.getInstance()
+                .register(INFORMATION_HAS_NUL)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<Object>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(Object value) {
+                        //从服务器获取物料信息后获取响应更新视图
+                        currPosition=Integer.valueOf(value.toString());
+                        mWorkOrderView.requestFocus();
+                        mWorkOrderView.setSelection(currPosition);
+                        if(mOrderListAdapter!=null)
+                        {
+                            mOrderListAdapter.notifyDataSetChanged();
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+
         //注册上传成功的观察者
         SharpBus.getInstance()
                 .register(UPLOAD_FINISH)
@@ -199,7 +248,7 @@ public class WorkOrderPresenter implements WorkOrderContract.Presenter {
 
                     @Override
                     public void onNext(Object value) {
-                        showLog("我来了"+value.toString());
+                        showLog("我来了Fragment"+value.toString());
                         if(currPosition<0)
                             return;
                         currPosition=-1;
@@ -253,6 +302,7 @@ public class WorkOrderPresenter implements WorkOrderContract.Presenter {
      * 存放物料、工位等信息的ListView 适配器
      */
     private class OrderListAdapter extends BaseAdapter{
+        int tempPosition=-1;  //上一个变化的EditText
         public OrderListAdapter()
         {
             //注册监听器
@@ -330,6 +380,39 @@ public class WorkOrderPresenter implements WorkOrderContract.Presenter {
                     return false;
                 }
             });
+            /**
+             * 用于处理焦点变迁的状态保存
+             */
+            myViewHolder.getEditText().setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                @Override
+                public void onFocusChange(View view, boolean b) {
+                    EditText editText
+                            =(EditText)view;
+                    if(tempPosition!=currPosition)
+                    {
+                        tempPosition=currPosition;
+                    }
+                    else if(currPosition!=-1)
+                    {
+                        return;
+                    }
+                    if(TextUtils.isEmpty(editText.getText()))
+                        return;
+                    if(!b)
+                    {
+                        if(position==4)
+                        {
+                            showLog("第4个:"+editText.getText());
+                            updateOperatorId(editText.getText().toString());
+                        }
+                        if(position==5)
+                        {
+                            showLog("第5个:"+editText.getText());
+                            updateWorkPlaceId(editText.getText().toString());
+                        }
+                    }
+                }
+            });
 
             myViewHolder.getEditText().setOnTouchListener(new View.OnTouchListener() {
                 @Override
@@ -339,11 +422,11 @@ public class WorkOrderPresenter implements WorkOrderContract.Presenter {
                     {
                         if(position==4)
                         {
-                            mWorkOrderModel.updateWorkOrderByOperatorId(myViewHolder.getContent());
+                            updateOperatorId(myViewHolder.getContent());
                         }
                         else if(position==5)
                         {
-                            mWorkOrderModel.updateWorkOrderByWorkPlaceId(myViewHolder.getContent());
+                            updateWorkPlaceId(myViewHolder.getContent());
                         }
                     }
                     return false;

@@ -20,4 +20,10 @@
         android:orderInCategory="100"
         android:title="@string/action_resetConfig"
         app:showAsAction="never" />
+    <!--<item-->
+        <!--android:id="@+id/action_upload"-->
+        <!--android:icon="@mipmap/ic_switch_src"-->
+        <!--android:orderInCategory="100"-->
+        <!--android:title="@string/action_upload"-->
+        <!--app:showAsAction="never" />-->
 </menu>

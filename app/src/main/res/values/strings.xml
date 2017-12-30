@@ -6,7 +6,7 @@
     <string name="workplace_input_hint">录入工位号</string>
     <string name="update_config">正在更新配置信息..</string>
     <string name="action_syncTypeConfig">更新配置信息</string>
-    <string name="login_operatorId_hint">员工号</string>
+    <string name="login_operatorId_hint">用户名</string>
     <string name="login_password_hint">密码</string>
     <string name="login_button_label">登录</string>
     <string name="login_switchOn">自动登录</string>
@@ -51,4 +51,5 @@
     <string name="badLogCode">输入异常代码</string>
     <string name="loading">Loading</string>
     <string name="action_resetConfig">更新配置</string>
+    <string name="action_upload">上传数据</string>
 </resources>

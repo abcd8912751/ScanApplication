@@ -34,6 +34,7 @@ import io.reactivex.schedulers.Schedulers;
 import okhttp3.Call;
 
 import static com.furja.qc.utils.Constants.FURIA_BARCODEINFO_URL;
+import static com.furja.qc.utils.Constants.INFORMATION_HAS_NUL;
 import static com.furja.qc.utils.Constants.MATERIAL_INTERNET_ABNORMAL;
 import static com.furja.qc.utils.Constants.TYPE_BADLOG_WITHBTN;
 import static com.furja.qc.utils.Constants.UPLOAD_FINISH;
@@ -65,10 +66,61 @@ public class LogBadWithBtnModel implements LogBadWithBnContract.Model {
      */
     public boolean ISNisNull()
     {
-        if(badMaterialLog==null)
-            return true;
+
         if(TextUtils.isEmpty(badMaterialLog.getMaterialISN()))
             return true;
+        return false;
+    }
+
+    /**
+     * 判断物料tiaoma、员工号、机台号中是否有空的情况
+     */
+    public boolean infoHasNull()
+    {
+        if(badMaterialLog==null)
+            return true;
+        if(ISNisNull())
+        {
+            SharpBus.getInstance()
+                    .post(INFORMATION_HAS_NUL,0);
+            return true;
+        }
+        if(TextUtils.isEmpty(badMaterialLog.getOperatorId()))
+        {
+            SharpBus.getInstance()
+                    .post(INFORMATION_HAS_NUL,4);
+            return true;
+        }
+        if(TextUtils.isEmpty(badMaterialLog.getWorkPlaceId()))
+        {
+            SharpBus.getInstance()
+                    .post(INFORMATION_HAS_NUL,5);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 判断物料tiaoma、员工号、机台号中是否有空的情况
+     */
+    public boolean infoHasNullL()
+    {
+        if(badMaterialLog==null)
+            return true;
+        if(ISNisNull())
+        {
+            return true;
+        }
+        if(TextUtils.isEmpty(badMaterialLog.getOperatorId()))
+        {
+
+            return true;
+        }
+        if(TextUtils.isEmpty(badMaterialLog.getWorkPlaceId()))
+        {
+
+            return true;
+        }
         return false;
     }
 
@@ -191,11 +243,21 @@ public class LogBadWithBtnModel implements LogBadWithBnContract.Model {
     {
         if(badMaterialLog!=null)
         {
-            if(badMaterialLog.getBadCount()>0)
+            if(TextUtils.isEmpty(badMaterialLog.getMaterialISN()))
+                return;
+            if(TextUtils.isEmpty(badMaterialLog.getOperatorId()))
             {
-                syncToLocal();
-                Utils.toUpload();   //在此基础上重新上传数据
+                return;
             }
+            if(TextUtils.isEmpty(badMaterialLog.getWorkPlaceId()))
+            {
+                return;
+            }
+            syncToLocal();
+            Utils.toUpload();   //在此基础上重新上传数据
+            badMaterialLog.setMaterialISN("");
+            badMaterialLog.setOperatorId("");
+            badMaterialLog.setWorkPlaceId("");
         }
     }
 

@@ -49,9 +49,10 @@ public class MyViewHolder {
     {
         if(getContent().length()>0&&info_content.isClickable())
             info_content.addClearButton();
-
+//        showLog("点击了:"+event.getX());
         if (event.getX() > info_content.getWidth() - info_content.getPaddingRight() - info_content.getIntrinsicWidth()) {
             info_content.setText("");
+            showLog("清空了infotext");
             info_content.removeClearButton();
             return true;
         }
@@ -88,6 +89,14 @@ public class MyViewHolder {
             imm.hideSoftInputFromWindow(info_content.getWindowToken(), 0);
     }
 
+    public boolean isEditing()
+    {
+        InputMethodManager imm = (InputMethodManager)info_content.getContext() .getSystemService(Context.INPUT_METHOD_SERVICE);
+        if(imm!=null&&imm.isActive())
+            return true;
+        else
+            return false;
+    }
 
 
     public String getContent()
@@ -104,7 +113,6 @@ public class MyViewHolder {
 
     public void setInfo_content(String content)
     {
-
         info_content.setText(content);
     }
 

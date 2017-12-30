@@ -7,9 +7,9 @@ package com.furja.qc.utils;
 public class Constants {
     public static final String LOG_TAG="marker_event";
     public static final String FURIA_LOGIN_URL ="http://192.168.10.5:5050/bcwebservice/Service.asmx/";
-    public static final String FURIA_BARCODEINFO_URL ="http://www.nbfurja.com/FJCommonInterface/GetBarCodeInfo/";
-    public static final String FURIA_UPLOAD_URL ="http://www.nbfurja.com/FJBadTypeInterface/SendBadTypeLog/";
-    public static final String FURIA_BADTYPEBASIC_URL ="http://www.nbfurja.com/FJBadTypeInterface/GetBadTypeBasicData";
+    public static final String FURIA_BARCODEINFO_URL ="http://192.168.8.46:8118/FJCommonInterface/GetBarCodeInfo/";
+    public static final String FURIA_UPLOAD_URL ="http://192.168.8.46:8118/FJBadTypeInterface/SendBadTypeLog/";
+    public static final String FURIA_BADTYPEBASIC_URL ="http://192.168.8.46:8118/FJBadTypeInterface/GetBadTypeBasicData";
     //当点击Button或提交时传递该Tag事件
     public static final String UPDATE_BAD_COUNT ="UPDATE_BAD_COUNT";
     public static final String FRAGMENT_ON_TOUCH ="FRAGMENT_ON_TOUCH";
@@ -35,4 +35,5 @@ public class Constants {
     public static final String OPERATOR_LOGIN_ERROR="账号或密码错误";
     public static final String BUTTON_FRAGMENT_TITLE="注塑车间";
     public static final String KEY_FRAGMENT_TITLE="装配车间";
+    public static final String INFORMATION_HAS_NUL="INFORMATION_HAS_NULL";
     }

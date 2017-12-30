@@ -220,12 +220,10 @@ public class Utils {
         {
             for(BadMaterialLog badlog:badLogs)
             {
-                if (badlog.getBadCount() < 1 ||
-                            TextUtils.isEmpty(badlog.getMaterialISN()))
+                if (TextUtils.isEmpty(badlog.getMaterialISN()))
                     {
                         delete(badlog);
                     }
-
                 else
                     {
                         uploadLogs.add(badlog);

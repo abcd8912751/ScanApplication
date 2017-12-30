@@ -1,12 +1,8 @@
 package com.furja.qc.presenter;
 
-
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
-import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.text.InputType;
 import android.text.TextUtils;
@@ -17,12 +13,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.NumberPicker;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.furja.qc.QcApplication;
-import com.furja.qc.beans.MaterialInfo;
-import com.furja.qc.databases.BadMaterialLog;
 import com.furja.qc.databases.BadTypeConfig;
 import com.furja.qc.databases.BadTypeConfigDao;
 import com.furja.qc.databases.DaoSession;
@@ -33,31 +26,21 @@ import com.furja.qc.R;
 import com.furja.qc.beans.WorkOrderInfo;
 import com.furja.qc.contract.LogBadWithBnContract;
 import com.furja.qc.model.LogBadWithBtnModel;
-import com.zhy.http.okhttp.OkHttpUtils;
-import com.zhy.http.okhttp.callback.StringCallback;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.reactivex.Observable;
-import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
-import io.reactivex.subjects.Subject;
-import okhttp3.Call;
 import q.rorbin.badgeview.QBadgeView;
 
 import static com.furja.qc.utils.Constants.FRAGMENT_ON_TOUCH;
-import static com.furja.qc.utils.Constants.FURIA_BARCODEINFO_URL;
-import static com.furja.qc.utils.Constants.MATERIAL_INTERNET_ABNORMAL;
 import static com.furja.qc.utils.Constants.UPDATE_BAD_COUNT;
-import static com.furja.qc.utils.Constants.UPDATE_WORKORDER_BY_MATERIAL;
 import static com.furja.qc.utils.Constants.UPLOAD_FINISH;
 import static com.furja.qc.utils.Utils.showLog;
 import static com.furja.qc.utils.Utils.showToast;
@@ -150,7 +133,8 @@ public class BadLogWithBtnPresenter implements LogBadWithBnContract.Presenter {
         Observable observable= Observable.fromCallable(new Callable() {
             @Override
             public Object call() throws Exception {
-                syncData(); //同步至本地并上传至服务器
+//                syncData(); //同步至本地并上传至服务器
+                caretaker.clear();
                 mDefectiveModel.updateData(workOrderInfo);
                 return "syncFinished";
             }
@@ -190,6 +174,7 @@ public class BadLogWithBtnPresenter implements LogBadWithBnContract.Presenter {
      */
     private class MyRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     {
+        private boolean isFirst;
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View view= LayoutInflater.from(parent.getContext())
@@ -203,33 +188,33 @@ public class BadLogWithBtnPresenter implements LogBadWithBnContract.Presenter {
             final LogViewHolder viewHolder=(LogViewHolder)holder;
             viewHolder.setText(mDefectiveModel.getOptionTitle(position));
             viewHolder.setMarkNum((int) mDefectiveModel.getMarkerCount(position));
+
             RxView.clicks(viewHolder.markerButton)
-                    .throttleFirst(200, TimeUnit.MILLISECONDS)
                     .subscribe(new Consumer<Object>() {
-                        @Override
-                        public void accept(Object o) throws Exception {
-                            if(mDefectiveModel.ISNisNull())
-                            {
-                                showToast("设置物料代码后方可记录");
-                                sharpBus.post(UPLOAD_FINISH,"ISN is NULL");
-                                return;
-                            }
-                            if(isEditing())
-                            {
-                                showEditDialog(viewHolder,position);
-                            }
-                            else
-                            {
-                                if(caretaker.isEmpty())
-                                    caretaker.appendUndo(mDefectiveModel.getMarkCountString());
-                                mDefectiveModel.addMarkerCount(position);
-                                viewHolder.setMarkNum((int) mDefectiveModel.getMarkerCount(position));
-                                sharpBus.post(UPDATE_BAD_COUNT,mDefectiveModel.getTotalBad());
-                                sharpBus.post(FRAGMENT_ON_TOUCH,"TOUCH");
-                                caretaker.appendUndo(mDefectiveModel.getMarkCountString());  //保存这个记录
-                            }
+                    @Override
+                    public void accept(Object o) throws Exception
+                    {
+                        if(mDefectiveModel.infoHasNull())
+                        {
+                            showToast("设置物料代码/员工号/机台号后方可记录");
+                            return;
                         }
-                    });
+                        if(isEditing())
+                        {
+                            showEditDialog(viewHolder,position);
+                        }
+                        else
+                        {
+                            if (caretaker.isEmpty())
+                                caretaker.appendUndo(mDefectiveModel.getMarkCountString());
+                            sharpBus.post(UPDATE_BAD_COUNT, mDefectiveModel.getTotalBad());
+                            mDefectiveModel.addMarkerCount(position);
+                            viewHolder.setMarkNum((int) mDefectiveModel.getMarkerCount(position));
+                            caretaker.appendUndo(mDefectiveModel.getMarkCountString());  //保存这个记录
+                            sharpBus.post(FRAGMENT_ON_TOUCH, "TOUCH");
+                        }
+                    }
+                });
             RxView.longClicks(viewHolder.markerButton)
                     .subscribe(new Consumer<Object>() {
                         @Override
@@ -305,6 +290,13 @@ public class BadLogWithBtnPresenter implements LogBadWithBnContract.Presenter {
                 //编辑按钮
                 case R.id.btn_edit_btnFrag:
                     try{
+                        if(mDefectiveModel.infoHasNull())
+                        {
+                            showToast("设置物料代码/员工号/机台号后方可记录");
+                            showLog("设置物料代码/员工号/机台号后方可记录");
+//                            sharpBus.post(UPLOAD_FINISH,"ISN is NULL");
+                            return;
+                        }
                         if(!isEditing)
                         {
                             ((ImageButton)v).setImageResource(R.mipmap.ic_editing_src);
@@ -319,17 +311,20 @@ public class BadLogWithBtnPresenter implements LogBadWithBnContract.Presenter {
                     break;
                 //submit按钮、传递上传完成
                 case R.id.btn_submit_btnFrag:
-                    if(!mDefectiveModel.ISNisNull())
+                    if(!mDefectiveModel.infoHasNull())
                     {
                         syncData();
                         mDefectiveModel.clearCount();
                         myRecyclerAdapter.notifyDataSetChanged();
+                        sharpBus.post(UPLOAD_FINISH,UPLOAD_FINISH);
                     }
                     else
                     {
+                        showToast("设置物料代码/员工号/机台号后方可");
+
 //                        showReadBarCodeDialog(v);
                     }
-                    sharpBus.post(UPLOAD_FINISH,UPLOAD_FINISH);
+
                     break;
             }
         }
