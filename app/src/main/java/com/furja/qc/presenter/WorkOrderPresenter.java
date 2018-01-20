@@ -104,46 +104,26 @@ public class WorkOrderPresenter implements WorkOrderContract.Presenter {
     private void registerObserver() {
         SharpBus.getInstance()
                 .register(MATERIAL_INTERNET_ABNORMAL)
-                .subscribe(new Observer<Object>() {
+                .subscribe(new Consumer<Object>() {
                     @Override
-                    public void onSubscribe(Disposable d) {
-
-                    }
-
-                    @Override
-                    public void onNext(Object value) {
-                        //从服务器获取物料信息后获取响应更新视图
+                    public void accept(Object o) throws Exception {
+                        //从服务器获取物料信息网络失败重试
                         requestCounts++;
                         if(requestCounts<3)
                             mWorkOrderModel.updateWorkOrderByBarCode(mWorkOrderModel.getMaterialBarCode());
                         else
                             showToast("网络连接异常,请重试");
                     }
-
-                    @Override
-                    public void onError(Throwable e) {
-
-                    }
-
-                    @Override
-                    public void onComplete() {
-
-                    }
                 });
         //注册获取物料信息的观察者
         SharpBus.getInstance()
                 .register(UPDATE_WORKORDER_BY_MATERIAL)
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<Object>() {
+                .subscribe(new Consumer<Object>() {
                     @Override
-                    public void onSubscribe(Disposable d) {
-
-                    }
-
-                    @Override
-                    public void onNext(Object value) {
+                    public void accept(Object o) throws Exception {
                         //从服务器获取物料信息后获取响应更新视图
-                        if(value.toString().contains("finish"))
+                        if(o.toString().contains("finish"))
                         {
                             showLog("获取到物料信息");
                             notifyAndUpdateBadData();
@@ -161,62 +141,32 @@ public class WorkOrderPresenter implements WorkOrderContract.Presenter {
                         }
                         requestCounts=0;
                     }
-
-                    @Override
-                    public void onError(Throwable e) {
-
-                    }
-
-                    @Override
-                    public void onComplete() {
-
-                    }
                 });
 
         SharpBus.getInstance()
                 .register(INFORMATION_HAS_NUL)
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<Object>() {
+                .subscribe(new Consumer<Object>() {
                     @Override
-                    public void onSubscribe(Disposable d) {
-
-                    }
-
-                    @Override
-                    public void onNext(Object value) {
-                        //从服务器获取物料信息后获取响应更新视图
-                        currPosition=Integer.valueOf(value.toString());
+                    public void accept(Object o) throws Exception {
+                        //跳转焦点至没有填写信息的位置(物料代码、员工号、机台号)
+                        currPosition=Integer.valueOf(o.toString());
                         mWorkOrderView.requestFocus();
                         mWorkOrderView.setSelection(currPosition);
+                        showLog("没有输的位置是:"+currPosition);
                         if(mOrderListAdapter!=null)
                         {
                             mOrderListAdapter.notifyDataSetChanged();
                         }
                     }
-
-                    @Override
-                    public void onError(Throwable e) {
-
-                    }
-
-                    @Override
-                    public void onComplete() {
-
-                    }
                 });
-
         //注册上传成功的观察者
         SharpBus.getInstance()
                 .register(UPLOAD_FINISH)
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<Object>() {
+                .subscribe(new Consumer<Object>() {
                     @Override
-                    public void onSubscribe(Disposable d) {
-
-                    }
-
-                    @Override
-                    public void onNext(Object value) {
+                    public void accept(Object o) throws Exception {
                         currPosition=0; //上传成功后置光标为0
                         mWorkOrderModel.setMaterialNull();
                         mWorkOrderView.requestFocus();
@@ -227,46 +177,18 @@ public class WorkOrderPresenter implements WorkOrderContract.Presenter {
                             mOrderListAdapter.notifyDataSetChanged();
                         }
                     }
-
-                    @Override
-                    public void onError(Throwable e) {
-
-                    }
-
-                    @Override
-                    public void onComplete() {
-
-                    }
                 });
-        Observable<Long> observable= SharpBus.getInstance().register(FRAGMENT_ON_TOUCH);
+        Observable observable= SharpBus.getInstance().register(FRAGMENT_ON_TOUCH);
         observable.observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<Object>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {
-
-                    }
-
-                    @Override
-                    public void onNext(Object value) {
-                        showLog("我来了Fragment"+value.toString());
-                        if(currPosition<0)
-                            return;
-                        currPosition=-1;
-                        if(mOrderListAdapter!=null)
-                            mOrderListAdapter.notifyDataSetChanged();
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-
-                    }
-
-                    @Override
-                    public void onComplete() {
-
-                    }
-
-                });
+                .subscribe(new Consumer<Object>() {
+                               @Override
+                               public void accept(Object value) throws Exception {
+                                   currPosition=-1;
+                                   if(mOrderListAdapter!=null)
+                                       mOrderListAdapter.notifyDataSetChanged();
+                                   showLog(currPosition+"<Fragment"+value.toString());
+                               }
+                           });
     }
 
 
@@ -302,36 +224,19 @@ public class WorkOrderPresenter implements WorkOrderContract.Presenter {
      * 存放物料、工位等信息的ListView 适配器
      */
     private class OrderListAdapter extends BaseAdapter{
-        int tempPosition=-1;  //上一个变化的EditText
+        int tempPosition=-2;  //上一个变化的EditText
         public OrderListAdapter()
         {
             //注册监听器
             Observable<Long> observable= SharpBus.getInstance().register(UPDATE_BAD_COUNT);
             observable.observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new Observer<Long>() {
-                @Override
-                public void onSubscribe(Disposable d) {
-
-                }
-
-                @Override
-                public void onNext(Long value) {
-                    mWorkOrderModel.updateDefectCount(value);
-                    notifyDataSetChanged();
-                }
-
-                @Override
-                public void onError(Throwable e) {
-
-                }
-
-                @Override
-                public void onComplete() {
-
-                }
-
+                    .subscribe(new Consumer<Long>() {
+                        @Override
+                        public void accept(Long aLong) throws Exception {
+                            mWorkOrderModel.updateDefectCount(aLong);
+                            notifyDataSetChanged();
+                        }
             });
-
         }
 
         @Override
@@ -392,7 +297,7 @@ public class WorkOrderPresenter implements WorkOrderContract.Presenter {
                     {
                         tempPosition=currPosition;
                     }
-                    else if(currPosition!=-1)
+                    else
                     {
                         return;
                     }

@@ -36,10 +36,11 @@ public class SharpBus {
      *
      */
     public synchronized <T> Observable<T> register(@NonNull String tag) {
-        Subject<T> subject = PublishSubject.create();
+        Subject subject = PublishSubject.create().toSerialized();
         obseorvableMap.put(tag,subject);
         return subject;
     }
+
 
     /**
      * 解注册

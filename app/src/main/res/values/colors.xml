@@ -10,6 +10,7 @@
     <color name="imageIndexBorder">#daa447</color>
     <color name="holo_white">#ff00BCDC</color>
     <color name="white">#FFFFFF</color>
+    <color name="colorLegendTextBg">#EEEEEE</color>
     <color name="over_color">#FFD8433C</color>
     <color name="holo_circle">#ffcc33cc</color>
     <color name="holo_text">#ff0f82f6</color>

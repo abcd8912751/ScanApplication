@@ -13,6 +13,8 @@
     <string name="action_logOut">切换账号</string>
     <string name="action_switchScene">切换场景</string>
     <string name="login_switchOff">手动登录</string>
+    <string name="chart_scrollOn">自动滚动</string>
+    <string name="chart_scrollOff">手动滚动</string>
     <string name="login_preference_label">使用此账号登录</string>
     <string name="switchLogin__button_label">切换账号</string>
     <string name="input_prefill"></string>
@@ -51,5 +53,5 @@
     <string name="badLogCode">输入异常代码</string>
     <string name="loading">Loading</string>
     <string name="action_resetConfig">更新配置</string>
-    <string name="action_upload">上传数据</string>
+    <string name="action_viewReport">查看报表</string>
 </resources>

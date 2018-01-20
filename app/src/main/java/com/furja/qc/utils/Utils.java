@@ -47,6 +47,7 @@ public class Utils {
 
     public static void showToast(final String msg)
     {
+        showLog(msg);
         new Thread(){
             public void run(){
                 try {
@@ -211,23 +212,19 @@ public class Utils {
         BadMaterialLogDao dao=daoSession.getBadMaterialLogDao();
         List<BadMaterialLog> badLogs,
                 uploadLogs=new ArrayList<BadMaterialLog>();
-        QueryBuilder queryBuilder=dao.queryBuilder();
-        badLogs
-             =queryBuilder.where(BadMaterialLogDao.Properties.IsUploaded.eq(false))
-                .list();
-        showLog("尚存未上传报告数量:"+badLogs.size());
+        badLogs=dao.loadAll();
         if(badLogs!=null)
         {
             for(BadMaterialLog badlog:badLogs)
             {
-                if (TextUtils.isEmpty(badlog.getMaterialISN()))
-                    {
-                        delete(badlog);
-                    }
+                if (badlog.isUploaded()||TextUtils.isEmpty(badlog.getMaterialISN()))
+                {
+                    delete(badlog);
+                }
                 else
-                    {
-                        uploadLogs.add(badlog);
-                    }
+                {
+                    uploadLogs.add(badlog);
+                }
             }
         }
         showLog("待上传的数据条数:"+uploadLogs.size());
@@ -235,11 +232,14 @@ public class Utils {
     }
 
     public static void delete(BadMaterialLog badMaterialLog) {
-        try {
+        try
+        {
             DaoSession daoSession= QcApplication.getDaoSession();
             BadMaterialLogDao dao=daoSession.getBadMaterialLogDao();
             dao.delete(badMaterialLog);
-        } catch (Exception e) {
+            showLog("已删除本次记录"+badMaterialLog.getMaterialISN());
+        } catch (Exception e)
+        {
             e.printStackTrace();
         }
     }

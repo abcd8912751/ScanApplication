@@ -36,4 +36,7 @@ dependencies {
     implementation 'org.greenrobot:greendao:3.2.2'
     implementation 'com.afollestad.material-dialogs:core:0.9.6.0'
     implementation 'com.kyleduo.switchbutton:library:2.0.0'
+    implementation 'org.apmem.tools:layouts:1.10@aar'
+
+    compile project(path: ':hellocharts-library')
 }

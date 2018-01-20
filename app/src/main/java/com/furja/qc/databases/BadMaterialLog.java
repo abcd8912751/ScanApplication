@@ -166,13 +166,13 @@ public class BadMaterialLog {
                                 setIsUploaded(true);
                                 showLog("上传数据成功啦");
                                 showToast("上传成功");
+                                Utils.delete(BadMaterialLog.this);
                             }
                             else
                             {
                                 showLog(responce+">"+toUploadString());
                                 Utils.saveToLocal(BadMaterialLog.this);
                             }
-
                         }
                     });
         } catch (Exception e) {
@@ -217,10 +217,13 @@ public class BadMaterialLog {
                             {
                                 setIsUploaded(true);
                                 showLog(responce);
+                                Utils.delete(BadMaterialLog.this);
                             }
                             else
+                            {
                                 showLog(responce+">"+toUploadString());
-                            Utils.saveToLocal(BadMaterialLog.this);
+                                Utils.saveToLocal(BadMaterialLog.this);
+                            }
                         }
                     });
         } catch (Exception e) {

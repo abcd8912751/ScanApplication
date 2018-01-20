@@ -10,6 +10,7 @@ public class Constants {
     public static final String FURIA_BARCODEINFO_URL ="http://192.168.8.46:8118/FJCommonInterface/GetBarCodeInfo/";
     public static final String FURIA_UPLOAD_URL ="http://192.168.8.46:8118/FJBadTypeInterface/SendBadTypeLog/";
     public static final String FURIA_BADTYPEBASIC_URL ="http://192.168.8.46:8118/FJBadTypeInterface/GetBadTypeBasicData";
+    public static final String FJ_BADTYPETOTAL_WORKPLACE ="http://192.168.8.46:8118/FJBadTypeInterface/GetBadTypeTotal/";
     //当点击Button或提交时传递该Tag事件
     public static final String UPDATE_BAD_COUNT ="UPDATE_BAD_COUNT";
     public static final String FRAGMENT_ON_TOUCH ="FRAGMENT_ON_TOUCH";

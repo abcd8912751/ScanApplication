@@ -30,12 +30,17 @@ import com.furja.qc.model.LogBadWithBtnModel;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.reactivex.Observable;
+import io.reactivex.ObservableOperator;
+import io.reactivex.ObservableSource;
+import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import q.rorbin.badgeview.QBadgeView;
 
@@ -96,6 +101,12 @@ public class BadLogWithBtnPresenter implements LogBadWithBnContract.Presenter {
                         mDefectiveModel=new LogBadWithBtnModel(btn_titles);
                     }
 
+                    /**
+                     * 获取MarkerButton的label文本
+                     * @param badTypeConfigs
+                     * @param list_size
+                     * @return
+                     */
                     @NonNull
                     private String[] readBtn_titles(List<BadTypeConfig> badTypeConfigs, int list_size) {
                         String[] btn_titles;
@@ -190,30 +201,55 @@ public class BadLogWithBtnPresenter implements LogBadWithBnContract.Presenter {
             viewHolder.setMarkNum((int) mDefectiveModel.getMarkerCount(position));
 
             RxView.clicks(viewHolder.markerButton)
+                    .flatMap(new Function<Object, ObservableSource<?>>() {
+                        @Override
+                        public ObservableSource<?> apply(Object o) throws Exception {
+                            sharpBus.post(FRAGMENT_ON_TOUCH, "TOUCH_MARKERBUTTON");
+                            if(mDefectiveModel.infoHasNullL())
+                                return Observable.just("first").delay(200, TimeUnit.MILLISECONDS);
+                            else
+                                return Observable.just(o);
+                        }
+                    })
                     .subscribe(new Consumer<Object>() {
-                    @Override
-                    public void accept(Object o) throws Exception
-                    {
-                        if(mDefectiveModel.infoHasNull())
+                        @Override
+                        public void accept(final Object o) throws Exception
                         {
-                            showToast("设置物料代码/员工号/机台号后方可记录");
-                            return;
+                            if(mDefectiveModel.infoHasNull())
+                            {
+                                showToast("设置物料代码/员工号/机台号后方可记录");
+                                return;
+                            }
+                            if(isEditing())
+                            {
+                                showEditDialog(viewHolder,position);
+                            }
+                            else
+                            {
+                                if (caretaker.isEmpty())
+                                    caretaker.appendUndo(mDefectiveModel.getMarkCountString());
+                                mDefectiveModel.addMarkerCount(position);
+                                caretaker.appendUndo(mDefectiveModel.getMarkCountString());  //保存这个记录
+
+                                int markerNum=(int)mDefectiveModel.getMarkerCount(position);
+                                if(o.toString().contains("first"))
+                                {   //Observable.delay后的线程非主线程,需在此调至主线程更新视图
+                                    Observable.just(markerNum)
+                                            .observeOn(AndroidSchedulers.mainThread())
+                                            .subscribe(new Consumer<Integer>() {
+                                                @Override
+                                                public void accept(Integer value) throws Exception {
+                                                    viewHolder.setMarkNum(value);
+                                                    notifyDataSetChanged();
+                                                }
+                                            });
+                                }
+                                else
+                                    viewHolder.setMarkNum(markerNum);
+                                sharpBus.post(UPDATE_BAD_COUNT, mDefectiveModel.getTotalBad());
+                                showLog("添加标记>"+viewHolder.getMarkNum());
+                            }
                         }
-                        if(isEditing())
-                        {
-                            showEditDialog(viewHolder,position);
-                        }
-                        else
-                        {
-                            if (caretaker.isEmpty())
-                                caretaker.appendUndo(mDefectiveModel.getMarkCountString());
-                            sharpBus.post(UPDATE_BAD_COUNT, mDefectiveModel.getTotalBad());
-                            mDefectiveModel.addMarkerCount(position);
-                            viewHolder.setMarkNum((int) mDefectiveModel.getMarkerCount(position));
-                            caretaker.appendUndo(mDefectiveModel.getMarkCountString());  //保存这个记录
-                            sharpBus.post(FRAGMENT_ON_TOUCH, "TOUCH");
-                        }
-                    }
                 });
             RxView.longClicks(viewHolder.markerButton)
                     .subscribe(new Consumer<Object>() {
@@ -264,7 +300,7 @@ public class BadLogWithBtnPresenter implements LogBadWithBnContract.Presenter {
     {
         @Override
         public void onClick(View v) {
-            sharpBus.post(FRAGMENT_ON_TOUCH,"TOUCH");
+            sharpBus.post(FRAGMENT_ON_TOUCH,"DOCK_TOUCH");
             switch (v.getId())
             {
                 //undo按钮
@@ -293,8 +329,6 @@ public class BadLogWithBtnPresenter implements LogBadWithBnContract.Presenter {
                         if(mDefectiveModel.infoHasNull())
                         {
                             showToast("设置物料代码/员工号/机台号后方可记录");
-                            showLog("设置物料代码/员工号/机台号后方可记录");
-//                            sharpBus.post(UPLOAD_FINISH,"ISN is NULL");
                             return;
                         }
                         if(!isEditing)
@@ -321,10 +355,7 @@ public class BadLogWithBtnPresenter implements LogBadWithBnContract.Presenter {
                     else
                     {
                         showToast("设置物料代码/员工号/机台号后方可");
-
-//                        showReadBarCodeDialog(v);
                     }
-
                     break;
             }
         }
@@ -352,18 +383,7 @@ public class BadLogWithBtnPresenter implements LogBadWithBnContract.Presenter {
                             dialog.cancel();
                         }
                     }
-                }).keyListener(new DialogInterface.OnKeyListener() {
-            @Override
-            public boolean onKey(DialogInterface dialogInterface, int i, KeyEvent keyEvent) {
-                if(keyEvent!=null)
-                {
-                    if(keyEvent.getKeyCode()== KeyEvent.KEYCODE_ENTER)
-                    {
-                    }
-                }
-                return false;
-            }
-        }).canceledOnTouchOutside(false).show();
+                }).canceledOnTouchOutside(false).show();
     }
 
 
@@ -410,6 +430,4 @@ public class BadLogWithBtnPresenter implements LogBadWithBnContract.Presenter {
             }
         }
     }
-
-
 }

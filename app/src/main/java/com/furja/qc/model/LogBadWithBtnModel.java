@@ -113,12 +113,10 @@ public class LogBadWithBtnModel implements LogBadWithBnContract.Model {
         }
         if(TextUtils.isEmpty(badMaterialLog.getOperatorId()))
         {
-
             return true;
         }
         if(TextUtils.isEmpty(badMaterialLog.getWorkPlaceId()))
         {
-
             return true;
         }
         return false;

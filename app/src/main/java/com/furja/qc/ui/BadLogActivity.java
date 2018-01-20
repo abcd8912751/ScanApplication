@@ -243,11 +243,11 @@ public class BadLogActivity extends AppCompatActivity implements WorkOrderContra
             startActivity(intent);
             finish();
         }
-//        else if(id==R.id.action_upload)
-//        {
-//
-//
-//        }
+        else if(id==R.id.action_viewReport)
+        {
+            Intent intent=new Intent(this,ChartActivity.class);
+            startActivity(intent);
+        }
         return super.onOptionsItemSelected(item);
     }
 

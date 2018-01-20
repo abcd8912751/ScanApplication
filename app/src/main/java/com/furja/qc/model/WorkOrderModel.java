@@ -187,13 +187,13 @@ public class WorkOrderModel implements WorkOrderContract.Model {
      */
     public void syncDataBase()
     {
-        if(workOrder==null)
-            showLog("同步时当前WorkOrder对象为空");
-        else
-        {
-            WorkOrderDao dao=daoSession.getWorkOrderDao();
-            dao.saveInTx(workOrder);
-        }
+//        if(workOrder==null)
+//            showLog("同步时当前WorkOrder对象为空");
+//        else
+//        {
+//            WorkOrderDao dao=daoSession.getWorkOrderDao();
+//            dao.saveInTx(workOrder);
+//        }
     }
 
     /**
@@ -268,7 +268,6 @@ public class WorkOrderModel implements WorkOrderContract.Model {
                 .addParams("Barcode", barCode)
                 .build()
                 .execute(new StringCallback() {
-
                     @Override
                     public void onError(Call call, Exception e, int i) {
                         SharpBus.getInstance().post(MATERIAL_INTERNET_ABNORMAL,"true");
@@ -296,9 +295,6 @@ public class WorkOrderModel implements WorkOrderContract.Model {
                             showToast("没有找到物料,需重输");
                             SharpBus.getInstance()
                                     .post(UPDATE_WORKORDER_BY_MATERIAL,"error");
-                        }
-                        finally {
-
                         }
                     }
                 });

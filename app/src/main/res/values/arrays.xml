@@ -11,21 +11,39 @@
     </string-array>
 
     <string-array name="operate_options">
-        <item>料花</item>
-        <item>气纹</item>
-        <item>缩水</item>
         <item>缺料</item>
+        <item>多胶</item>
+        <item>缩水</item>
+        <item>冷料</item>
+        <item>气泡</item>
+        <item>气纹</item>
+        <item>料花</item>
+        <item>烧焦</item>
+        <item>白芯</item>
+        <item>顶高</item>
+        <item>拖伤</item>
+        <item>模印</item>
+        <item>杂料</item>
         <item>混色</item>
-        <item>夹水纹</item>
-        <item>划伤</item>
-        <item>碰伤</item>
-        <item>异物</item>
-        <item>黑点</item>
-        <item>白点</item>
         <item>油污</item>
-        <item>胶丝</item>
+        <item>脏污</item>
         <item>变形</item>
-        <item>调机不良</item>
+
+        <item>穿孔</item>
+        <item>堵孔</item>
+        <item>开痕</item>
+        <item>结合线</item>
+        <item>流痕</item>
+        <item>碰伤</item>
+        <item>划伤</item>
+        <item>修伤</item>
+        <item>水口休整</item>
+        <item>披锋</item>
+        <item>包胶脱胶</item>
+        <item>压伤</item>
+        <item>热光影</item>
+        <item>包装不符</item>
+        <item>尺寸不良</item>
         <item>其他</item>
     </string-array>
 </resources>
