@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <org.apmem.tools.layouts.FlowLayout
+        android:id="@+id/legendLayout"
+        android:layout_alignParentTop="true"
+        app:layoutDirection="ltr"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+    </org.apmem.tools.layouts.FlowLayout>
+    <lecho.lib.hellocharts.view.ColumnChartView
+        android:id="@+id/columnChart"
+        android:layout_marginTop="10dp"
+        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/legendLayout"
+        />
+
+</RelativeLayout>

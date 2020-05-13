@@ -1,14 +1,14 @@
 apply plugin: 'com.android.application'
 apply plugin: 'org.greenrobot.greendao'
 android {
-    compileSdkVersion 26
+    compileSdkVersion 28
     defaultConfig {
         applicationId "com.furja.qc"
-        minSdkVersion 18
-        targetSdkVersion 26
-        versionCode 1
-        versionName "1.0"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        minSdkVersion 19
+        targetSdkVersion 28
+        versionCode 11
+        versionName "11.0513"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         release {
@@ -16,27 +16,60 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        sourceCompatibility = '1.8'
+        targetCompatibility = '1.8'
+    }
+	android.applicationVariants.all { variants ->
+        variants.outputs.all {
+            outputFileName ="ScanApplication.apk"
+        }
+    }
+    dexOptions {
+        javaMaxHeapSize "4g"
+    }
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+    }
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    //noinspection GradleCompatible
-    implementation 'com.android.support:appcompat-v7:26.1.0'
-    implementation 'com.android.support:design:26.1.0'
-    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
+    implementation 'androidx.appcompat:appcompat:1.0.0'
+    implementation 'com.google.android.material:material:1.0.0'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.1'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'
+    implementation project(path: ':hellocharts-library')
     implementation 'q.rorbin:badgeview:1.1.3'
-    implementation 'com.jakewharton:butterknife:8.8.1'
-    annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
+    implementation 'com.jakewharton:butterknife:10.2.1'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:10.2.1'
     implementation 'com.jakewharton.rxbinding2:rxbinding:2.0.0'
-    implementation 'com.alibaba:fastjson:1.2.41'
-    implementation 'com.alibaba:fastjson:1.1.67.android'
+    implementation 'com.alibaba:fastjson:1.2.68'
+    implementation 'com.alibaba:fastjson:1.1.71.android'
     implementation 'org.greenrobot:greendao:3.2.2'
+    implementation 'com.zhy:okhttputils:2.6.2'
     implementation 'com.afollestad.material-dialogs:core:0.9.6.0'
     implementation 'com.kyleduo.switchbutton:library:2.0.0'
     implementation 'org.apmem.tools:layouts:1.10@aar'
-
-    compile project(path: ':hellocharts-library')
+    implementation 'com.squareup.retrofit2:retrofit:2.5.0'
+    implementation 'com.squareup.retrofit2:adapter-rxjava2:2.5.0'
+    implementation 'com.github.BaronZ88:Retrofit2-FastJson-Converter:1.2'
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.2'
+    implementation 'io.reactivex.rxjava2:rxandroid:2.1.0'
+    implementation 'com.github.CymChad:BaseRecyclerViewAdapterHelper:2.9.46'
+    implementation 'com.jaredrummler:material-spinner:1.3.1'
+    implementation 'com.nightonke:boommenu:2.1.1'
+    implementation 'com.uber.autodispose:autodispose-android-archcomponents:0.8.0'
+    implementation 'com.facebook.fresco:fresco:1.5.0'
+    implementation group: 'com.facebook.fresco', name: 'imagepipeline-okhttp3', version: '1.5.0'
+    implementation group: 'com.nineoldandroids', name: 'library', version: '2.4.0'
+    debugCompile 'com.squareup.leakcanary:leakcanary-android:1.6.3'
+    releaseCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.6.3'
 }
+
+
+

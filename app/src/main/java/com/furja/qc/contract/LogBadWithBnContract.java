@@ -1,7 +1,6 @@
 package com.furja.qc.contract;
 
-import android.support.v7.widget.RecyclerView;
-import android.view.View;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.furja.qc.beans.WorkOrderInfo;
 

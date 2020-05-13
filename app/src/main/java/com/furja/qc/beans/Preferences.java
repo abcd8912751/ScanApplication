@@ -18,6 +18,7 @@ public class Preferences {
     private static final String KEY_SOURSEOFTYPE="sourceOftype";//工作场景
     private static final String KEY_AUTO_LOGIN="autoLogin"; //是否自动登录
     private static final String KEY_ALARM_ON="alarm_On";    //是否已经开启闹钟
+    private static final String KEY_USER_ID="USER_ID";    //是否已经开启闹钟
     private static Context context;
 
 
@@ -46,21 +47,17 @@ public class Preferences {
         saveString(KEY_SOURSEOFTYPE,type);
     }
 
-    public static String getOperatorId() {
-        return getString(KEY_USER);
-    }
-
     public static String getOperatorPassword() {
         return getString(KEY_PASSWORD);
     }
 
-    public static boolean isAutoLogin()
-    {
+
+
+    public static boolean isAutoLogin() {
         return Boolean.parseBoolean(getString(KEY_AUTO_LOGIN));
     }
 
-    public static void saveAutoLogin(boolean isAutoLogined)
-    {
+    public static void saveAutoLogin(boolean isAutoLogined) {
         saveString(KEY_AUTO_LOGIN,isAutoLogined+"");
     }
 
@@ -74,22 +71,34 @@ public class Preferences {
         saveString(KEY_ALARM_ON,isAlarmOn+"");
     }
 
+    public static String getOperatorID() {
+        return getString(KEY_USER);
+    }
+
     /**
-     *保存当前测试次数
+     *保存用户名
      */
-    private static void saveUserName(String user)
-    {
+    private static void saveOperatorID(String user) {
         saveString(KEY_USER,user);
     }
+
+    public static String getUserID() {
+        return getString(KEY_USER_ID);
+    }
+
+    /**
+     *保存用户ID
+     */
+    private static void saveUserID(String userID) {
+        saveString(KEY_USER_ID,userID);
+    }
+
     /**
      *保存密码
      */
-    private static void saveOperatorPassword(String pass)
-    {
+    private static void saveOperatorPassword(String pass) {
         saveString(KEY_PASSWORD,pass);
     }
-
-
 
     private static void saveString(String key, String value) {
         SharedPreferences.Editor editor = getSharedPreferences().edit();
@@ -114,7 +123,18 @@ public class Preferences {
     }
 
     public static void saveUser(User user) {
-        saveUserName(user.getUserName());
+        String userName = user.getUserName();
+        saveOperatorID(userName);
         saveOperatorPassword(user.getPassword());
+        saveUserID(user.getUserId());
+    }
+
+    public static void clearUser() {
+        saveOperatorID("");
+        saveOperatorPassword("");
+//        User user = QcApplication.getUser();
+//        if(user!=null&&
+//                !TextUtils.isEmpty(user.getUserId()))
+            saveUserID("");
     }
 }

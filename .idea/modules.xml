@@ -2,9 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/ScanApplication.iml" filepath="$PROJECT_DIR$/ScanApplication.iml" />
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/hellocharts-library/hellocharts-library.iml" filepath="$PROJECT_DIR$/hellocharts-library/hellocharts-library.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ScanApplication.iml" filepath="$PROJECT_DIR$/ScanApplication.iml" group="ScanApplication" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" group="ScanApplication/app" />
+      <module fileurl="file://$PROJECT_DIR$/hellocharts-library/hellocharts-library.iml" filepath="$PROJECT_DIR$/hellocharts-library/hellocharts-library.iml" group="ScanApplication/hellocharts-library" />
     </modules>
   </component>
 </project>

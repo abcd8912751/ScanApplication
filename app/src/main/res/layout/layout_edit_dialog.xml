@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="@dimen/dp_360"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <TextView
+        android:id="@+id/itemNum_label"
+        android:text="@string/badItemNum_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
+        android:layout_marginStart="@dimen/activity_horizontal_margin"
+        android:layout_marginTop="@dimen/login_input_margin"
+        android:gravity="center_horizontal"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        />
+
+    <EditText
+        android:id="@+id/itemNum_edit"
+        android:hint="@string/input_prefill"
+        android:layout_width="@dimen/dp_200"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/dp_10"
+        android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
+        android:singleLine="true"
+        android:imeOptions="actionNext"
+        android:inputType="number"
+        android:focusable="true"
+        android:selectAllOnFocus="true"
+        android:focusableInTouchMode="true"
+        app:layout_constraintTop_toTopOf="@+id/itemNum_label"
+        app:layout_constraintBottom_toBottomOf="@+id/itemNum_label"
+        app:layout_constraintEnd_toEndOf="parent"
+        />
+
+    <TextView
+        android:id="@+id/itemRemark_label"
+        android:text="@string/label_remark"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
+        app:layout_constraintTop_toBottomOf="@+id/itemNum_label"
+        android:layout_marginTop="@dimen/login_input_margin"
+        android:layout_marginStart="@dimen/activity_horizontal_margin"
+        android:layout_marginBottom="@dimen/dp_12"
+        android:gravity="start"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        />
+
+    <EditText
+        android:id="@+id/itemRemark_edit"
+        android:layout_width="@dimen/dp_200"
+        android:layout_height="wrap_content"
+        android:hint="@string/input_prefill"
+        android:singleLine="true"
+        android:layout_marginStart="@dimen/dp_10"
+        android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
+        app:layout_constraintTop_toTopOf="@+id/itemRemark_label"
+        app:layout_constraintBottom_toBottomOf="@+id/itemRemark_label"
+        app:layout_constraintEnd_toEndOf="parent"
+        />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

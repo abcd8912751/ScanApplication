@@ -1,6 +1,7 @@
 package com.furja.qc.utils;
 
-import android.support.annotation.NonNull;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.annotation.NonNull;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -41,7 +42,17 @@ public class SharpBus {
         return subject;
     }
 
-
+    /**
+     * 注册指定数据类型的观察者并放入相应Map
+     */
+    public synchronized <T> Observable<T> register(@NonNull String tag,Class<T> tClass) {
+        Subject subject = PublishSubject.create().toSerialized();
+        if(!obseorvableMap.contains(tag))
+            obseorvableMap.put(tag,subject);
+        else
+            subject=obseorvableMap.get(tag);
+        return subject;
+    }
     /**
      * 解注册
      * @param tag

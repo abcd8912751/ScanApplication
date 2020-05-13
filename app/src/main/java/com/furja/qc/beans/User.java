@@ -10,6 +10,13 @@ public class User {
     private String userName;
     private String userId;
     private String password;
+    private String loginInfo;
+    private String packageName;
+    private int token;
+    private String note;
+
+    public User() {
+    }
 
     public String getUserName() {
         return userName;
@@ -33,8 +40,7 @@ public class User {
         this.password = password;
     }
 
-    public void formatUserId(String info)
-    {
+    public void formatUserId(String info) {
         String string[]= info.split(",");
         setUserId(string[0]);
     }
@@ -49,9 +55,43 @@ public class User {
     }
 
     public String getUserId() {
-        if(TextUtils.isEmpty(userId))
-            return "1";
         return userId;
+    }
+
+    public String getLoginInfo() {
+        return loginInfo;
+    }
+
+    public User setLoginInfo(String loginInfo) {
+        this.loginInfo = loginInfo;
+        return this;
+    }
+
+    public String getPackageName() {
+        return packageName;
+    }
+
+    public User setPackageName(String packageName) {
+        this.packageName = packageName;
+        return this;
+    }
+
+    public int getToken() {
+        return token;
+    }
+
+    public User setToken(int token) {
+        this.token = token;
+        return this;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public User setNote(String note) {
+        this.note = note;
+        return this;
     }
 
     public void setUserId(String userId) {

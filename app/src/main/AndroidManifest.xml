@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.furja.qc">
-    <uses-permission android:name="android.permission.INTERNET"></uses-permission>
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.FLASHLIGHT" />
+    <uses-permission android:name="android.permission.CAMERA"/>
 
     <application
         android:name="com.furja.qc.QcApplication"
@@ -13,39 +20,80 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
+        android:usesCleartextTraffic="true"
         android:theme="@style/AppTheme">
         <activity android:name="com.furja.qc.ui.SplashActivity"
+            android:theme="@style/AppSplashTheme"
             >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="com.furja.qc.ui.SurfActivity"
-            android:launchMode="singleTop"
-            android:label="@string/surf"/>
         <activity android:name="com.furja.qc.ui.LoginActivity"
-            android:theme="@style/AppTheme.NoActionBar"
+            android:theme="@style/AppSplashTheme"
             android:launchMode="singleTop"
             android:label="@string/surf"/>
-        <activity android:name="com.furja.qc.ui.BadLogActivity"
-            android:label="@string/qualityTest"
-            android:configChanges="orientation|keyboard|keyboardHidden"
-            android:windowSoftInputMode="adjustPan"
-            android:screenOrientation="portrait"
-            />
-        <activity android:name="com.furja.qc.ui.ReportActivity"
 
-            android:screenOrientation="portrait"
-            />
-        <activity android:name=".ui.MainActivity"
-            android:launchMode="singleTop">
-        </activity>
-        <activity android:name=".ui.ChartActivity"
+        <activity android:name=".ui.InjectionChartActivity"
             android:theme="@style/AppTheme.NoActionBar"
-            android:screenOrientation="landscape">
+            android:parentActivityName=".ui.InjectionLogActivity"
+            android:screenOrientation="landscape"
+            tools:ignore="LockedOrientationActivity">
         </activity>
+        <activity android:name=".ui.AssemblyLogActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan"
+            android:label="@string/label_assemblyLog"
+            tools:ignore="LockedOrientationActivity" />
+        <activity android:name=".ui.InjectionLogActivity"
+            android:label="@string/qualityTest"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustNothing"
+            tools:ignore="LockedOrientationActivity" />
+        <activity android:name=".ui.AssemblyChartActivity"
+            android:parentActivityName=".ui.AssemblyLogActivity"
+            android:screenOrientation="landscape"
+            android:theme="@style/AppTheme.NoActionBar"
+            tools:ignore="LockedOrientationActivity" />
+        <activity android:name=".ui.TourInspectionActivity"
+            android:screenOrientation="portrait"
+            android:label="@string/label_tourInspection"
+            android:windowSoftInputMode="adjustPan"
+            tools:ignore="LockedOrientationActivity" />
+        <activity android:name=".ui.DimenLogActivity"
+            android:label="@string/label_dimensionLog"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="stateHidden|adjustResize"
+            tools:ignore="LockedOrientationActivity" />
+        <activity android:name=".ui.InspectionHistoryActivity"
+            android:screenOrientation="portrait"
+            android:label="@string/label_viewHistory"
+            android:parentActivityName=".ui.InjectionLogActivity"
+            tools:ignore="LockedOrientationActivity" />
+        <activity android:name=".ui.SopActivity"
+            android:label="@string/viewSop"/>
+        <activity android:name=".ui.ZoomImageActivity"
+            android:theme="@style/AppTheme.NoActionBar"/>
+
         <service android:name=".services.UploadServices"></service>
+        <receiver android:name=".services.NetworkChangeReceiver"></receiver>
+        <receiver android:name=".services.ScanAndAlarmReceiver">
+            <intent-filter>
+                <action android:name="com.furja.qc.services.ALARM" />
+                <action android:name="com.furja.qc.services.CANCEL"/>
+                <action android:name="com.barcode.sendBroadcast" />
+            </intent-filter>
+        </receiver>
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.furja.qc.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 
 </manifest>

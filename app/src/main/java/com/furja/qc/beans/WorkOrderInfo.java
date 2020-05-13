@@ -11,6 +11,9 @@ public class WorkOrderInfo {
     private String operatorId;
     private String workPlaceId;
 
+    public WorkOrderInfo() {
+    }
+
     public WorkOrderInfo(String materialISN, String operatorId, String workPlaceId) {
         this.materialISN = materialISN;
         this.operatorId = operatorId;

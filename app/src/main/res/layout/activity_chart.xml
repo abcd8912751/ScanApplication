@@ -6,9 +6,11 @@
     <org.apmem.tools.layouts.FlowLayout
         android:id="@+id/legendLayout"
         android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
         app:layoutDirection="ltr"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_toStartOf="@+id/switch_autoScroll"
         android:orientation="horizontal">
     </org.apmem.tools.layouts.FlowLayout>
     <com.kyleduo.switchbutton.SwitchButton

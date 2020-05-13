@@ -8,6 +8,10 @@ import com.furja.qc.databases.BadMaterialLogDao;
 import com.furja.qc.databases.BadTypeConfig;
 import com.furja.qc.databases.BadTypeConfigDao;
 import com.furja.qc.databases.DaoSession;
+import com.furja.qc.databases.ProduceNo;
+import com.furja.qc.databases.ProduceNoDao;
+import com.furja.qc.databases.ProductModel;
+import com.furja.qc.databases.ProductModelDao;
 
 import org.greenrobot.greendao.query.QueryBuilder;
 
@@ -22,6 +26,10 @@ import static com.furja.qc.utils.Utils.showLog;
  */
 
 public class LocalBadTypeQuery implements BadTypeQuery {
+    private DaoSession daoSession;
+    public LocalBadTypeQuery(){
+        daoSession= QcApplication.getDaoSession();
+    }
 
     @Override
     public List<String> query(String input) {
@@ -32,12 +40,52 @@ public class LocalBadTypeQuery implements BadTypeQuery {
         return results;
     }
 
-    private  List<BadTypeConfig> queryLocal(String some)
+    public List<String> queryProductModel(String input) {
+        if(TextUtils.isEmpty(input))
+            return new ArrayList<String>();
+        input=input.toUpperCase();
+        ProductModelDao dao=daoSession.getProductModelDao();
+        QueryBuilder queryBuilder=dao.queryBuilder();
+        List<ProductModel> models=
+                queryBuilder
+                        .where(ProductModelDao.Properties.FName.like("%"+input+"%")).list();
+        List<String> results=new ArrayList<String>();
+        if(models==null)
+            return results;
+        else
+        {
+            for(ProductModel model:models)
+                results.add(model.getFName());
+        }
+        return results;
+    }
+    public List<String> queryProduceNo(CharSequence queryString) {
+        String query
+                = "%" + queryString + "%";
+        List<String> results
+                = getFilterList(query);
+        return results;
+
+    }
+
+    public List<String> getFilterList(String query) {
+        ProduceNoDao dao = daoSession.getProduceNoDao();
+        QueryBuilder queryBuilder
+                = dao.queryBuilder();
+        List<ProduceNo> productNumbers = queryBuilder.where(ProduceNoDao.Properties.ProductNo.like(query))
+                .list();
+        if (productNumbers == null)
+            return Collections.emptyList();
+        List<String> results = new ArrayList<String>();
+        for (ProduceNo productNumber : productNumbers)
+            results.add(productNumber.getProductNo());
+        return results;
+    }
+    public  List<BadTypeConfig> queryLocal(String some)
     {
         if(TextUtils.isEmpty(some))
-            return Collections.EMPTY_LIST;
+            return new ArrayList<BadTypeConfig>();
         some=some.toUpperCase();
-        DaoSession daoSession= QcApplication.getDaoSession();
         BadTypeConfigDao dao=daoSession.getBadTypeConfigDao();
         QueryBuilder queryBuilder=dao.queryBuilder();
         List<BadTypeConfig> badLogs=
@@ -48,5 +96,7 @@ public class LocalBadTypeQuery implements BadTypeQuery {
         else
             return badLogs;
     }
+
+
 
 }

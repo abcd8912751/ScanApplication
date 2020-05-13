@@ -1,48 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@mipmap/ic_login_bg">
+    android:layout_height="match_parent">
     <LinearLayout
         android:id="@+id/imageLinear_symbol"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/login_symbol_heigh"
+        android:focusableInTouchMode="true"
+        android:focusable="true"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/edit_login_operator">
+        app:layout_constraintTop_toTopOf="parent">
         <ImageView
             android:layout_marginTop="@dimen/login_button_margin"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:srcCompat="@mipmap/ic_qc_symbol"
-            android:contentDescription="@string/empty"
             />
     </LinearLayout>
+
     <com.furja.qc.view.ClearableEditTextWithIcon
         android:id="@+id/edit_login_operator"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@mipmap/edittext_white_normal"
+        android:layout_marginTop="@dimen/login_input_margin"
         android:layout_marginLeft="@dimen/login_horizontal_margin"
         android:layout_marginRight="@dimen/login_horizontal_margin"
         android:layout_marginBottom="@dimen/login_input_margin"
         android:drawablePadding="@dimen/login_horizontal_pading"
         android:hint="@string/login_operatorId_hint"
+        android:textColor="#FFFFFF"
         android:paddingLeft="@dimen/login_horizontal_pading"
         android:paddingRight="@dimen/login_horizontal_pading"
         android:imeOptions="actionNext"
         android:inputType="text"
-        android:maxLines="1"
-        android:textColor="@color/white"
-        android:textColorHint="@color/color_input_hint"
+        android:singleLine="true"
         android:textCursorDrawable="@null"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
-        app:layout_constraintTop_toBottomOf="@+id/imageLinear_symbol"
-        app:layout_constraintBottom_toTopOf="@+id/edit_login_password" />
+        app:layout_constraintTop_toBottomOf="@+id/imageLinear_symbol"/>
+
     <com.furja.qc.view.ClearableEditTextWithIcon
         android:id="@+id/edit_login_password"
         android:layout_width="match_parent"
@@ -50,33 +51,29 @@
         android:background="@mipmap/edittext_white_normal"
         android:drawablePadding="@dimen/login_horizontal_pading"
         android:hint="@string/login_password_hint"
+        android:textColor="#FFFFFF"
+        android:layout_marginTop="@dimen/dp_12"
         android:layout_marginBottom="@dimen/login_input_margin"
         android:layout_marginLeft="@dimen/login_horizontal_margin"
         android:layout_marginRight="@dimen/login_horizontal_margin"
         android:paddingLeft="@dimen/login_horizontal_pading"
         android:paddingRight="@dimen/login_horizontal_pading"
-        android:textColor="@color/white"
-        android:textColorHint="@color/color_input_hint"
         android:textCursorDrawable="@null"
+        android:singleLine="true"
         android:inputType="textPassword"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
         android:imeOptions="actionDone"
-        app:layout_constraintBottom_toTopOf="@+id/auto_login_checked"
-        app:layout_constraintTop_toBottomOf="@+id/edit_login_operator"/>
-
-    <com.kyleduo.switchbutton.SwitchButton
+        app:layout_constraintTop_toBottomOf="@+id/edit_login_operator" />
+    <CheckBox
         android:id="@+id/auto_login_checked"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"
-        android:drawablePadding="@dimen/login_horizontal_pading"
-        android:paddingLeft="@dimen/login_horizontal_pading"
-        android:layout_marginLeft="@dimen/login_horizontal_margin"
-        app:kswTextOn="@string/login_switchOn"
-        app:kswTextOff="@string/login_switchOff"
-        app:kswTextExtra="@dimen/textExtra_margin"
+        android:text="@string/login_switchOn"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
         app:layout_constraintBottom_toTopOf="@+id/login_startLoginBtn"
         app:layout_constraintTop_toBottomOf="@+id/edit_login_password"
+        app:layout_constraintStart_toStartOf="@+id/edit_login_password"
          />
     <Button
         android:id="@+id/login_startLoginBtn"
@@ -91,5 +88,4 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/auto_login_checked"
         style="@style/ButtonLogin"/>
-
-</android.support.constraint.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

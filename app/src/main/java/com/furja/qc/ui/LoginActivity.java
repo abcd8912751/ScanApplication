@@ -2,38 +2,33 @@ package com.furja.qc.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import com.google.android.material.snackbar.Snackbar;
+import androidx.appcompat.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.view.MotionEvent;
-import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.furja.qc.beans.ButtonWorkScene;
 import com.furja.qc.beans.EmptyWorkScene;
-import com.furja.qc.beans.KeyWorkScene;
 import com.furja.qc.beans.Preferences;
 import com.furja.qc.beans.WorkScene;
+import com.furja.qc.utils.StatusBarUtils;
 import com.jakewharton.rxbinding2.view.RxView;
 import com.furja.qc.R;
 import com.furja.qc.QcApplication;
 import com.furja.qc.beans.User;
 import com.furja.qc.utils.LoginUtils;
 import com.furja.qc.view.ClearableEditTextWithIcon;
-import com.kyleduo.switchbutton.SwitchButton;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnTouch;
 import io.reactivex.functions.Consumer;
 
 import static com.furja.qc.utils.Constants.TYPE_BADLOG_EMPTY;
 import static com.furja.qc.utils.Constants.TYPE_BADLOG_WITHBTN;
-import static com.furja.qc.utils.Constants.TYPE_BADLOG_WITHKEY;
 import static com.furja.qc.utils.Utils.showLog;
 import static com.furja.qc.utils.Utils.showToast;
 
@@ -49,29 +44,28 @@ public class LoginActivity extends AppCompatActivity {
     @BindView(R.id.login_startLoginBtn)
     Button startLoginBtn;
     @BindView(R.id.auto_login_checked)
-    SwitchButton autoLogin_switch;
+    CheckBox autoLogin_switch;
     private String password;
     private String user;
 
-    private WorkScene workScene;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         ButterKnife.bind(this);
-
+        new StatusBarUtils()
+                .setStatusBarColor(this, R.color.color_loginbg);
         operatorEdit.setIconResource(R.mipmap.ic_user_left);
         passwordEdit.setIconResource(R.mipmap.ic_password_left);
-
         password= Preferences.getOperatorPassword();
-        user= Preferences.getOperatorId();
+        user= Preferences.getOperatorID();
 
-        if(!TextUtils.isEmpty(user))
-        {
+        if(!TextUtils.isEmpty(user)) {
             operatorEdit.setText(user);
             passwordEdit.setText(password);
-            if(Preferences.isAutoLogin())
+            if(Preferences.isAutoLogin()) {
                 startLogin();
+            }
         }
         RxView.clicks(startLoginBtn)
               .subscribe(new Consumer<Object>() {
@@ -81,34 +75,16 @@ public class LoginActivity extends AppCompatActivity {
                               ||TextUtils.isEmpty(passwordEdit.getText().toString()))
                           showToast("请输入用户名/密码");
                       else
+                      {
+//                          switchToLogAssembly();
                           startLogin();
+                      }
                   }
               });
-
-
-
         autoLogin_switch.setChecked(Preferences.isAutoLogin());
-
-        //设置注塑车间工作场景
-//        Preferences.saveSourceType(TYPE_BADLOG_WITHKEY+"");
-//        Preferences.saveSourceType(TYPE_BADLOG_WITHBTN+"");
-//        switchToLogBad();
     }
 
-    @OnTouch({R.id.edit_login_operator,R.id.edit_login_password})
-    public boolean OnTouch(View view, MotionEvent event)
-    {
-        ClearableEditTextWithIcon info_content=(ClearableEditTextWithIcon)view;
-        if (info_content.getCompoundDrawables()[2] == null)
-            return false;
-        if (event.getAction() != MotionEvent.ACTION_UP)
-            return false;
-        if (event.getX() > info_content.getWidth() - info_content.getPaddingRight() - info_content.getIntrinsicWidth()) {
-            info_content.setText("");
-            info_content.removeClearButton();
-        }
-        return false;
-    }
+
     /**
      * 开始登录
      */
@@ -117,6 +93,8 @@ public class LoginActivity extends AppCompatActivity {
         String password=passwordEdit.getText().toString();
         startLoginBtn.setText("登录中...");
         startLoginBtn.setEnabled(false);
+        operatorEdit.setEnabled(false);
+        passwordEdit.setEnabled(false);
         LoginUtils.login(user, password, new LoginUtils.LoginCallBack() {
             @Override
             public void onSuccess(User user) {
@@ -124,8 +102,10 @@ public class LoginActivity extends AppCompatActivity {
                 Preferences.saveAutoLogin(autoLogin_switch.isChecked());
                 if(Preferences.getSourceType()!=TYPE_BADLOG_EMPTY)
                 {
-                    switchToLogBad();
-                    finish();
+                    if(Preferences.getSourceType()==TYPE_BADLOG_WITHBTN)
+                        switchToLogInjection();
+                    else
+                        switchToLogAssembly();
                 }
                 else
                     selectWorkScene();
@@ -136,23 +116,30 @@ public class LoginActivity extends AppCompatActivity {
                 showLog(errorMsg);
                 startLoginBtn.setText("登录");
                 startLoginBtn.setEnabled(true);
+                operatorEdit.setEnabled(true);
+                passwordEdit.setEnabled(true);
                 Snackbar.make(startLoginBtn,errorMsg,Snackbar.LENGTH_SHORT).show();
             }
         });
     }
 
+    private void switchToLogAssembly() {
+        Intent intent=new Intent(LoginActivity.this, AssemblyLogActivity.class);
+        startActivity(intent);
+        finish();
+    }
 
     /**
      * 弹出对话框选择
      */
     private void selectWorkScene() {
-        updateWorkScene();
+        WorkScene workScene=new EmptyWorkScene();
         new MaterialDialog
                 .Builder(this)
                 .title(workScene.getDialogTitle())
                 .content(workScene.getDialogContent())
                 .positiveText(workScene.getYesButtonLabel())
-                .negativeColor(getResources().getColor(R.color.colorNegative))
+                .negativeColorRes(R.color.colorNegative)
                 .negativeText(workScene.getNoButtonLabel())
                 .autoDismiss(false)
                 .onPositive(new MaterialDialog.SingleButtonCallback() {
@@ -160,7 +147,7 @@ public class LoginActivity extends AppCompatActivity {
                     public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                         workScene.selectSwitchYes();
                         dialog.cancel();
-                        switchToLogBad();
+                        switchToLogInjection();
                     }
                 })
                 .onNegative(new MaterialDialog.SingleButtonCallback() {
@@ -168,38 +155,19 @@ public class LoginActivity extends AppCompatActivity {
                     public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                         workScene.selectSwitchNo();
                         dialog.cancel();
-                        switchToLogBad();
+                        switchToLogAssembly();
                     }
                 })
                 .canceledOnTouchOutside(false)
                 .show();
-
     }
-
-    private void updateWorkScene() {
-
-        switch( Preferences.getSourceType())
-        {
-            case TYPE_BADLOG_EMPTY:
-                workScene=new EmptyWorkScene();
-                break;
-            case TYPE_BADLOG_WITHBTN:
-                workScene=new ButtonWorkScene();
-                break;
-            case TYPE_BADLOG_WITHKEY:
-                workScene=new KeyWorkScene();
-                break;
-        }
-    }
-
 
     /**
      * 切换至异常收集界面
      */
-    private void switchToLogBad() {
-        Intent intent=new Intent(LoginActivity.this, BadLogActivity.class);
+    private void switchToLogInjection() {
+        Intent intent=new Intent(LoginActivity.this, InjectionLogActivity.class);
         startActivity(intent);
         finish();
     }
-
 }

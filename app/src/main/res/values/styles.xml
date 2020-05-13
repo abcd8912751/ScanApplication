@@ -11,14 +11,28 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
+
+    <style name="AppSplashTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="android:windowBackground">@mipmap/ic_login_bg</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
     <style name="ButtonLogin" parent="@android:style/Widget.Button">
         <item name="android:textAppearance">@style/TextAppearance.AppCompat.Large</item>
         <item name="android:textColor">@drawable/skin_color_button</item>
         <item name="android:background">@drawable/shape_button_login</item>
     </style>
-    <style name="ButtonSwithOperator" parent="@android:style/Widget.Button">
-        <item name="android:textAppearance">@style/TextAppearance.AppCompat.Large</item>
-        <item name="android:textColor">@drawable/skin_color_button</item>
-        <item name="android:background">@drawable/shape_switchlogin_btn</item>
+
+    <style name="AnimHorizontal" parent="@android:style/Animation">
+        <item name="android:windowEnterAnimation">@anim/push_left_in</item>
+        <item name="android:windowExitAnimation">@anim/push_left_out</item>
+    </style>
+
+    <style name="drawee">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="actualImageScaleType">fitCenter</item>
     </style>
 </resources>

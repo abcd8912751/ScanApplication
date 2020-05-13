@@ -1,8 +1,8 @@
 package com.furja.qc.view;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,29 +12,25 @@ import android.widget.Filter;
 import android.widget.TextView;
 
 import com.furja.qc.R;
+import com.furja.qc.databases.DaoSession;
+import com.furja.qc.databases.ProduceNoDao;
 import com.furja.qc.utils.LocalBadTypeQuery;
-import com.furja.qc.view.MyViewHolder;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
-import static com.furja.qc.utils.Utils.showLog;
 
 /**
  * Created by zhangmeng on 2017/12/14.
  */
 
 public class MyAutoAdapter extends ArrayAdapter {
-
     private ArrayList<String> autoPrompts;
-    private int layoutResourceID;
-    public MyAutoAdapter(@NonNull Context context, int resource) {
-        super(context, resource);
+    private int flag;
+    String queryString;
+    public MyAutoAdapter(@NonNull Context context, int falg) {
+        super(context, R.layout.simple_list_item);
         autoPrompts=new ArrayList<String>();
-        this.layoutResourceID=resource;
+        this.flag=falg;
     }
 
     public MyAutoAdapter(@NonNull Context context, int resource, int textViewResourceId) {
@@ -75,7 +71,8 @@ public class MyAutoAdapter extends ArrayAdapter {
         AutoViewHolder autoViewHolder;
         if(convertView==null)
         {
-            convertView= LayoutInflater.from(parent.getContext()).inflate(layoutResourceID,null);
+            convertView= LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.simple_list_item,null);
             autoViewHolder=new AutoViewHolder();
             autoViewHolder.textView=(TextView)convertView.findViewById(R.id.simple_text_item);
             convertView.setTag(autoViewHolder);
@@ -104,7 +101,19 @@ public class MyAutoAdapter extends ArrayAdapter {
             badTypeQuery=new LocalBadTypeQuery();
             if(TextUtils.isEmpty(charSequence))
                 charSequence="";
-            List<String> results=badTypeQuery.query(charSequence.toString());
+            List<String> results=new ArrayList<>();
+            switch (flag)
+            {
+                case 1:
+                    results=badTypeQuery.query(charSequence.toString());
+                    break;
+                case 2:
+                    results=badTypeQuery.queryProductModel(charSequence.toString());
+                    break;
+                case 3:
+                    results=badTypeQuery.queryProduceNo(charSequence);
+                    break;
+            }
             FilterResults filterResults= new FilterResults();
             filterResults.count=results.size();
             filterResults.values=results;

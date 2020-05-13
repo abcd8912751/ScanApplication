@@ -12,7 +12,7 @@
         android:focusable="true"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
         android:layout_marginLeft="@dimen/tabIndicatorHeight"
-        android:layout_marginBottom="@dimen/right_horizontal_spacing"
+        android:layout_marginBottom="@dimen/dp_6"
         android:gravity="bottom|left"
         />
 </LinearLayout>

@@ -1,0 +1,41 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="cn.studio.myapplication.MainActivity">
+
+    <item
+        android:id="@+id/action_hideOrShow"
+        android:icon="@mipmap/ic_floating_hide"
+        android:title="@string/action_hide"
+        android:orderInCategory="100"
+        app:showAsAction="always"
+        app:actionViewClass="android.widget.ImageButton" />
+
+    <item
+        android:id="@+id/action_logOut"
+        android:icon="@mipmap/ic_logout_src"
+        android:orderInCategory="100"
+        android:title="@string/action_logOut"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_switchScene"
+        android:icon="@mipmap/ic_switch_src"
+        android:orderInCategory="100"
+        android:title="@string/action_switchScene"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_resetConfig"
+        android:orderInCategory="100"
+        android:title="@string/action_resetConfig"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_viewReport"
+        android:orderInCategory="100"
+        android:title="@string/action_viewReport"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_resetView"
+        android:orderInCategory="100"
+        android:title="@string/action_resetView"
+        app:showAsAction="never" />
+</menu>

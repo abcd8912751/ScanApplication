@@ -1,11 +1,10 @@
 package com.furja.qc.databases;
 
-import android.text.TextUtils;
-
 import com.alibaba.fastjson.JSON;
 import com.furja.qc.QcApplication;
 import com.furja.qc.beans.WorkOrderInfo;
 import com.furja.qc.jsonbeans.UploadDataJson;
+import com.furja.qc.utils.Constants;
 import com.furja.qc.utils.Utils;
 import com.zhy.http.okhttp.OkHttpUtils;
 import com.zhy.http.okhttp.callback.StringCallback;
@@ -18,7 +17,6 @@ import org.greenrobot.greendao.DaoException;
 import org.greenrobot.greendao.annotation.Keep;
 import org.greenrobot.greendao.annotation.NotNull;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -27,20 +25,14 @@ import java.util.List;
 import java.util.Map;
 
 import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.FormBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
-import static com.furja.qc.utils.Constants.FURIA_UPLOAD_URL;
-import static com.furja.qc.utils.Constants.RESET_CONFIG;
+import static com.furja.qc.utils.Constants.FURJA_UPLOAD_URL;
 import static com.furja.qc.utils.Utils.showLog;
 import static com.furja.qc.utils.Utils.showToast;
 
 /**
- * GreenDao的品质异常类型基类
+ * GreenDao的品质异常类型基类 数据自动上传功能用途较少
+ *为防止数据多次上传,于2018-8-11日改为直接删除本地数据不予自动上传
  */
 @Entity(active = true)
 public class BadMaterialLog {
@@ -71,6 +63,7 @@ public class BadMaterialLog {
     /** Used to resolve relations */
     @Generated(hash = 2040040024)
     private transient DaoSession daoSession;
+
     /** Used for active entity operations. */
     @Generated(hash = 308540047)
     private transient BadMaterialLogDao myDao;
@@ -80,7 +73,7 @@ public class BadMaterialLog {
         this.id=null;
         setWorkOrderInfo(workOrderInfo);
         setSourceType(sourceType);
-        this.qcPersonnel= QcApplication.getUser().getUserId();
+        this.qcPersonnel= QcApplication.getUserID();
         setLongBadCounts(markCounts);
         this.badCount = BadCount;
         this.collectionDate= Calendar.getInstance().getTime();
@@ -92,17 +85,11 @@ public class BadMaterialLog {
         this.id=null;
         setWorkOrderInfo(workOrderInfo);
         setSourceType(sourceType);
-        this.qcPersonnel= QcApplication.getUser().getUserId();
+        this.qcPersonnel= QcApplication.getUserID();
         setBadCodeCount(markCounts);
         this.badCount = markCounts.size();
         this.collectionDate= Calendar.getInstance().getTime();
         setIsUploaded(false);
-    }
-
-
-
-    @Generated(hash = 34962087)
-    public BadMaterialLog() {
     }
 
     @Generated(hash = 1854446091)
@@ -122,6 +109,10 @@ public class BadMaterialLog {
         this.isUploaded = isUploaded;
     }
 
+    @Generated(hash = 34962087)
+    public BadMaterialLog() {
+    }
+
     /**
      * 针对本数据库上传数据
      */
@@ -131,7 +122,7 @@ public class BadMaterialLog {
         if(isUploaded)
             return;
         showLog("只有我一个人在战斗");
-        String uploadUrl=FURIA_UPLOAD_URL;
+        String uploadUrl=Constants.getBaseUrl()+ FURJA_UPLOAD_URL;
         try {
             Map<String, String> uploadParams = getUploadParams();
             showLog(uploadParams.toString());
@@ -144,7 +135,8 @@ public class BadMaterialLog {
                         @Override
                         public void onError(Call call, Exception e, int i) {
                             e.printStackTrace();
-                            showToast("网络异常,数据已保存");
+                            showToast("网络异常");
+							Utils.delete(BadMaterialLog.this);
                         }
 
                         @Override
@@ -166,13 +158,14 @@ public class BadMaterialLog {
                                 setIsUploaded(true);
                                 showLog("上传数据成功啦");
                                 showToast("上传成功");
-                                Utils.delete(BadMaterialLog.this);
+                                
                             }
                             else
                             {
                                 showLog(responce+">"+toUploadString());
-                                Utils.saveToLocal(BadMaterialLog.this);
+//                                Utils.saveToLocal(BadMaterialLog.this);
                             }
+							Utils.delete(BadMaterialLog.this);
                         }
                     });
         } catch (Exception e) {
@@ -186,7 +179,7 @@ public class BadMaterialLog {
         if(isUploaded)
             return;
         showLog("只有我一个人在战斗");
-        String uploadUrl=FURIA_UPLOAD_URL;
+        String uploadUrl= Constants.getBaseUrl()+ FURJA_UPLOAD_URL;
         try {
             Map<String, String> uploadParams = getUploadParams();
             OkHttpUtils
@@ -232,7 +225,7 @@ public class BadMaterialLog {
     }
 
     @Keep
-    private Map<String, String> getUploadParams() {
+    public Map<String, String> getUploadParams() {
         Map<String,String> uploadParams=new HashMap<String,String>();
         uploadParams.put("QCheckPersonnel",qcPersonnel);
         uploadParams.put("MaterialISN", materialISN);
@@ -302,13 +295,10 @@ public class BadMaterialLog {
         this.operatorId= workOrderInfo.getOperatorId();
         this.workPlaceId= workOrderInfo.getWorkPlaceId();
     }
-
-    public List<String> getBadTypeCode() {
-        return this.badTypeCode;
-    }
-
-    public void setBadTypeCode(List<String> badTypeCode) {
-        this.badTypeCode = badTypeCode;
+    @Keep
+    public boolean isUploaded()
+    {
+        return getIsUploaded();
     }
 
     public Long getId() {
@@ -327,6 +317,13 @@ public class BadMaterialLog {
         this.sourceType = sourceType;
     }
 
+    public String getQcPersonnel() {
+        return this.qcPersonnel;
+    }
+
+    public void setQcPersonnel(String qcPersonnel) {
+        this.qcPersonnel = qcPersonnel;
+    }
 
     public String getMaterialISN() {
         return this.materialISN;
@@ -360,6 +357,14 @@ public class BadMaterialLog {
         this.collectionDate = collectionDate;
     }
 
+    public List<String> getBadTypeCode() {
+        return this.badTypeCode;
+    }
+
+    public void setBadTypeCode(List<String> badTypeCode) {
+        this.badTypeCode = badTypeCode;
+    }
+
     public List<String> getBadCodeCount() {
         return this.badCodeCount;
     }
@@ -376,7 +381,7 @@ public class BadMaterialLog {
         this.badCount = badCount;
     }
 
-    public boolean isUploaded() {
+    public boolean getIsUploaded() {
         return this.isUploaded;
     }
 
@@ -418,18 +423,6 @@ public class BadMaterialLog {
             throw new DaoException("Entity is detached from DAO context");
         }
         myDao.update(this);
-    }
-
-    public String getQcPersonnel() {
-        return this.qcPersonnel;
-    }
-
-    public void setQcPersonnel(String qcPersonnel) {
-        this.qcPersonnel = qcPersonnel;
-    }
-
-    public boolean getIsUploaded() {
-        return this.isUploaded;
     }
 
     /** called by internal mechanisms, do not call yourself. */

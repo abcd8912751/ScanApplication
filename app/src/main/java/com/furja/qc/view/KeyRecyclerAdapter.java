@@ -1,23 +1,24 @@
 package com.furja.qc.view;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.v7.widget.RecyclerView;
-import android.text.InputType;
+import androidx.recyclerview.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.furja.qc.R;
+import com.furja.qc.beans.BadLogEntry;
+import com.furja.qc.databases.BadTypeConfig;
+import com.furja.qc.utils.LocalBadTypeQuery;
 import com.furja.qc.utils.SharpBus;
 import com.jakewharton.rxbinding2.view.RxView;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Observable;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -25,24 +26,21 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
 import q.rorbin.badgeview.QBadgeView;
 
-import static com.furja.qc.utils.Constants.FRAGMENT_ON_TOUCH;
 import static com.furja.qc.utils.Constants.UPDATE_BAD_COUNT;
-import static com.furja.qc.utils.Utils.showLog;
 
 /**
  * Created by zhangmeng on 2017/12/14.
  */
-
 public class KeyRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
-
-
-    private List<BadItem> mData;
+    private List<BadLogEntry> mData;
     private SharpBus sharpBus;
     private boolean isEditing;
+    LocalBadTypeQuery localBadTypeQuery;
     public KeyRecyclerAdapter() {
-        mData =new ArrayList<BadItem>();
+        mData =new ArrayList<BadLogEntry>();
         sharpBus=SharpBus.getInstance();
         setEditing(false);
+        localBadTypeQuery = new LocalBadTypeQuery() ;
     }
 
     @Override
@@ -56,22 +54,19 @@ public class KeyRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     @Override
     public void onBindViewHolder(final RecyclerView.ViewHolder holder, final int position) {
         final MyKeyHolder myKeyHolder=(MyKeyHolder)holder;
-        final BadItem badItem=getItem(position);
-        myKeyHolder.setCodeCount(badItem.getCodeCount());
-        myKeyHolder.setLabel(badItem.getBadCode());
+        final BadLogEntry badLogEntry =getItem(position);
+        myKeyHolder.setCodeCount(badLogEntry.getCodeCount());
+        myKeyHolder.setLabel(badLogEntry.getBadCode());
         RxView.clicks(myKeyHolder.button)
                 .subscribe(new Consumer<Object>() {
                     @Override
                     public void accept(Object o) throws Exception {
-                        if(isEditing())
-                        {
+                        if(isEditing()) {
                             showEditorDialog(myKeyHolder.itemView.getContext(),position);
                         }
-                        else
-                        {
-                            badItem.addCount();
-                            freshItem(position, badItem);
-                            sharpBus.post(FRAGMENT_ON_TOUCH,"TOUCH");
+                        else {
+                            badLogEntry.addCount();
+                            freshItem(position, badLogEntry);
                         }
                     }
                 });
@@ -87,17 +82,17 @@ public class KeyRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     /**
      * 更新当前Item
      * @param position
-     * @param badItem
+     * @param badLogEntry
      */
-    private void freshItem(int position, BadItem badItem) {
-        if(badItem.getCodeCount()>0)
-            mData.set(position,badItem);
+    private void freshItem(int position, BadLogEntry badLogEntry) {
+        if(badLogEntry.getCodeCount()>0)
+            mData.set(position, badLogEntry);
         else
             mData.remove(position);
         notifyView();
     }
 
-    private BadItem getItem(int position)
+    private BadLogEntry getItem(int position)
     {
         return mData.get(position);
     }
@@ -113,31 +108,48 @@ public class KeyRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
      * @param position
      */
     private void showEditorDialog(Context context, final int position) {
-        final BadItem badItem=getItem(position);
+        final BadLogEntry badLogEntry =getItem(position);
         String prefill="";
-        prefill=prefill+badItem.getCodeCount();
+        prefill=prefill+ badLogEntry.getCodeCount();
+        View customView
+                =LayoutInflater.from(context).inflate(R.layout.layout_edit_dialog,null);
+        final EditText itemNum_edit=customView.findViewById(R.id.itemNum_edit);
+        final EditText itemRemark_edit=customView.findViewById(R.id.itemRemark_edit);
+        itemNum_edit.setText(prefill);
+        itemRemark_edit.setText(badLogEntry.getRemark());
+        List<BadTypeConfig> badTypeConfigs
+                =localBadTypeQuery.queryLocal(badLogEntry.getBadCode());
+        String title="设定该异常个数及备注";
+        if(!badTypeConfigs.isEmpty())
+            title="编辑类型 "+badTypeConfigs.get(0).getTypeDesp();
         new MaterialDialog.Builder(context)
-                .title("设定该异常类型个数")
-                .inputType(InputType.TYPE_CLASS_NUMBER)
+                .title(title)
+                .customView(customView,false)
                 .autoDismiss(false)
-                .input("不设置将清空该异常计数", prefill, new MaterialDialog.InputCallback() {
-                    @Override
-                    public void onInput(@NonNull MaterialDialog dialog, CharSequence input) {
-                        long count=0;
-                        if(!TextUtils.isEmpty(input))
-                        {
-                            count= Long.valueOf(input.toString());
-                        }
-                        badItem.setCodeCount(count);
-                        freshItem(position, badItem);
-                        dialog.cancel();
+                .positiveText("确定").onPositive((dialog, which) -> {
+                    long count=0;
+                    CharSequence input=itemNum_edit.getText();
+                    if(!TextUtils.isEmpty(input))
+                    {
+                        count= Long.valueOf(input.toString());
                     }
-                }).show();
+                    input=itemRemark_edit.getText();
+                    if(!TextUtils.isEmpty(input))
+                    {
+                        badLogEntry.setRemark(input.toString());
+                    }
+                    else
+                        badLogEntry.setRemark("");
+                    badLogEntry.setCodeCount(count);
+                    freshItem(position, badLogEntry);
+                    dialog.cancel();
+        }).show().getWindow()
+                .setBackgroundDrawableResource(R.drawable.shape_dialog_bg);
     }
 
     public long getTotalCount() {
         long totalCount =0;
-        for(BadItem item:mData)
+        for(BadLogEntry item:mData)
             totalCount = totalCount +item.getCodeCount();
         return totalCount;
     }
@@ -161,6 +173,7 @@ public class KeyRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                     public void accept(Object o) throws Exception {
                         mData.clear();
                         notifyDataSetChanged();
+                        setEditing(false);
                     }
                 });
     }
@@ -201,7 +214,7 @@ public class KeyRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
      * 向mData里添加对象
      * @param code
      */
-    public void addItem(String code)
+    public int addItem(String code)
     {
         int position=-1;
         for(int i=0;i<mData.size();i++)
@@ -213,14 +226,18 @@ public class KeyRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             }
         }
         if (position<0)
-            mData.add(new BadItem(code,1));
+        {
+            position=mData.size();
+            mData.add(new BadLogEntry(code,1).setRemark(""));
+        }
         else
         {
-            BadItem item=getItem(position);
+            BadLogEntry item=getItem(position);
             item.addCount();
             mData.set(position,item);
         }
         notifyView();
+        return position;
     }
 
     /**
@@ -230,7 +247,7 @@ public class KeyRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         sharpBus.post(UPDATE_BAD_COUNT, getTotalCount());
         notifyDataSetChanged();
     }
-    public List<BadItem> getmData() {
+    public List<BadLogEntry> getmData() {
         return mData;
     }
 

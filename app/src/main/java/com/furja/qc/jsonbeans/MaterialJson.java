@@ -1,5 +1,7 @@
 package com.furja.qc.jsonbeans;
 
+import java.util.List;
+
 /**
  * 从http://www.nbfurja.com/FJCommonInterface/GetBarCodeInfo/
  * ?BarCode=70030110076140009T获取Json
@@ -7,10 +9,11 @@ package com.furja.qc.jsonbeans;
 
 public class MaterialJson {
 
+
     /**
      * ErrCode : 100
      * ErrMsg : 条码信息获取成功!
-     * ErrData : {"FBCDate":"2017-05-23T00:00:00","FItemID":"110076","FNumber":"2.520.504.5305601401","FShortNumber":"5305601401","FName":"HV380地刷中接头(花岗岩灰)","FModel":"ABS747H","FQty":140,"FTranType":"注塑"}
+     * ErrData : {"FBCDate":"2019-04-28 00:00:00","FItemID":"54119","FNumber":"2.520.201.5202120101","FShortNumber":"5202120101","FName":"NV350新电机罩小扣(271C)","FModel":"ABS747","FQty":590,"FTranType":"注塑","FSCDNO":"190410-239","FBatteryBarCodeNO1":null,"FBatteryBarCodeNO2":null,"FMaterialDescription":null,"MSL":null,"FUrl":[{"url":"https://www.nbfurja.com:7070/Image/5202120101/图片8.png"},{"url":"https://www.nbfurja.com:7070/Image/5202120101/图片9.png"}],"FGrossWeight":"0.9000000000"}
      */
 
     private int ErrCode;
@@ -43,14 +46,21 @@ public class MaterialJson {
 
     public static class ErrDataBean {
         /**
-         * FBCDate : 2017-05-23T00:00:00
-         * FItemID : 110076
-         * FNumber : 2.520.504.5305601401
-         * FShortNumber : 5305601401
-         * FName : HV380地刷中接头(花岗岩灰)
-         * FModel : ABS747H
-         * FQty : 140
+         * FBCDate : 2019-04-28 00:00:00
+         * FItemID : 54119
+         * FNumber : 2.520.201.5202120101
+         * FShortNumber : 5202120101
+         * FName : NV350新电机罩小扣(271C)
+         * FModel : ABS747
+         * FQty : 590
          * FTranType : 注塑
+         * FSCDNO : 190410-239
+         * FBatteryBarCodeNO1 : null
+         * FBatteryBarCodeNO2 : null
+         * FMaterialDescription : null
+         * MSL : null
+         * FUrl : [{"url":"https://www.nbfurja.com:7070/Image/5202120101/图片8.png"},{"url":"https://www.nbfurja.com:7070/Image/5202120101/图片9.png"}]
+         * FGrossWeight : 0.9000000000
          */
 
         private String FBCDate;
@@ -61,6 +71,13 @@ public class MaterialJson {
         private String FModel;
         private int FQty;
         private String FTranType;
+        private String FSCDNO;
+        private Object FBatteryBarCodeNO1;
+        private Object FBatteryBarCodeNO2;
+        private Object FMaterialDescription;
+        private Object MSL;
+        private String FGrossWeight;
+        private List<FUrlBean> FUrl;
 
         public String getFBCDate() {
             return FBCDate;
@@ -124,6 +141,78 @@ public class MaterialJson {
 
         public void setFTranType(String FTranType) {
             this.FTranType = FTranType;
+        }
+
+        public String getFSCDNO() {
+            return FSCDNO;
+        }
+
+        public void setFSCDNO(String FSCDNO) {
+            this.FSCDNO = FSCDNO;
+        }
+
+        public Object getFBatteryBarCodeNO1() {
+            return FBatteryBarCodeNO1;
+        }
+
+        public void setFBatteryBarCodeNO1(Object FBatteryBarCodeNO1) {
+            this.FBatteryBarCodeNO1 = FBatteryBarCodeNO1;
+        }
+
+        public Object getFBatteryBarCodeNO2() {
+            return FBatteryBarCodeNO2;
+        }
+
+        public void setFBatteryBarCodeNO2(Object FBatteryBarCodeNO2) {
+            this.FBatteryBarCodeNO2 = FBatteryBarCodeNO2;
+        }
+
+        public Object getFMaterialDescription() {
+            return FMaterialDescription;
+        }
+
+        public void setFMaterialDescription(Object FMaterialDescription) {
+            this.FMaterialDescription = FMaterialDescription;
+        }
+
+        public Object getMSL() {
+            return MSL;
+        }
+
+        public void setMSL(Object MSL) {
+            this.MSL = MSL;
+        }
+
+        public String getFGrossWeight() {
+            return FGrossWeight;
+        }
+
+        public void setFGrossWeight(String FGrossWeight) {
+            this.FGrossWeight = FGrossWeight;
+        }
+
+        public List<FUrlBean> getFUrl() {
+            return FUrl;
+        }
+
+        public void setFUrl(List<FUrlBean> FUrl) {
+            this.FUrl = FUrl;
+        }
+
+        public static class FUrlBean {
+            /**
+             * url : https://www.nbfurja.com:7070/Image/5202120101/图片8.png
+             */
+
+            private String url;
+
+            public String getUrl() {
+                return url;
+            }
+
+            public void setUrl(String url) {
+                this.url = url;
+            }
         }
     }
 }

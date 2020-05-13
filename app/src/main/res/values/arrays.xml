@@ -1,14 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="workinfo_titles">
-        <item>物料代码</item>
-        <item>物料名称</item>
-        <item>规格</item>
-        <item>日期</item>
-        <item>员工号</item>
-        <item>机台号</item>
-        <item>不良品数量</item>
-    </string-array>
 
     <string-array name="operate_options">
         <item>缺料</item>

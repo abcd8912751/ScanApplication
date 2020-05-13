@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/transparent">
+    <TextView
+        android:id="@+id/title"
+        android:text="@string/qualityTest"
+        android:textColor="@color/white"
+        android:layout_centerVertical="true"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        />
+    <com.nightonke.boommenu.BoomMenuButton
+        android:id="@+id/boom"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_alignParentEnd="true"
+        app:bmb_backgroundEffect="false"
+        >
+    </com.nightonke.boommenu.BoomMenuButton>
+</RelativeLayout>
