@@ -4,7 +4,6 @@ import android.text.TextUtils;
 
 import com.furja.qc.QcApplication;
 import com.furja.qc.databases.BadMaterialLog;
-import com.furja.qc.databases.BadMaterialLogDao;
 import com.furja.qc.databases.BadTypeConfig;
 import com.furja.qc.databases.BadTypeConfigDao;
 import com.furja.qc.databases.DaoSession;
@@ -28,7 +27,7 @@ import static com.furja.qc.utils.Utils.showLog;
 public class LocalBadTypeQuery implements BadTypeQuery {
     private DaoSession daoSession;
     public LocalBadTypeQuery(){
-        daoSession= QcApplication.getDaoSession();
+        daoSession= Utils.getDaoSession();
     }
 
     @Override

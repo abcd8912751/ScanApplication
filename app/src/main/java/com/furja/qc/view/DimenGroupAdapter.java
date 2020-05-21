@@ -58,7 +58,7 @@ public class DimenGroupAdapter extends BaseQuickAdapter<DimenGroupItem,BaseViewH
         AppCompatTextView text_noDimenGauge = helper.getView(R.id.text_noDimenGauge);
         AppCompatTextView text_hardnessGauge = helper.getView(R.id.text_hardnessGauge);
         AppCompatTextView text_feelerGauge = helper.getView(R.id.text_feelerGauge);
-        EditText edit_lowerLimit=helper.getView(R.id.edit_lowerLimit);
+        EditText edit_lowerLimit = helper.getView(R.id.edit_lowerLimit);
         text_hardnessGauge.setOnClickListener(v -> {
             if (!isRender)
                 edit_lowerLimit.requestFocus();

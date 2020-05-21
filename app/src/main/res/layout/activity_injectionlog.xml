@@ -54,6 +54,7 @@
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
         android:textColor="@color/holo_title"
         android:singleLine="true"
+        android:visibility="gone"
         android:text="@string/label_operatorID"
         android:layout_marginStart="@dimen/dp_10"
         app:layout_constraintHorizontal_weight="1"
@@ -62,7 +63,7 @@
         app:layout_constraintBottom_toTopOf="@+id/label_workplace"
         app:layout_constraintEnd_toStartOf="@+id/edit_operator"
         />
-    <com.furja.qc.view.ClearableEditTextWithIcon
+    <com.furja.qc.view.CleanableEditText
         android:id="@+id/edit_operator"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -72,6 +73,7 @@
         android:singleLine="true"
         android:nextFocusDown="@+id/edit_workplace"
         android:inputType="textEmailAddress"
+        android:visibility="gone"
         app:layout_constraintHorizontal_weight="1"
         app:layout_constraintStart_toEndOf="@+id/label_operator"
         app:layout_constraintTop_toTopOf="@+id/label_operator"
@@ -96,7 +98,7 @@
         app:layout_constraintEnd_toStartOf="@+id/edit_workplace"
         />
 
-    <com.furja.qc.view.ClearableEditTextWithIcon
+    <com.furja.qc.view.CleanableEditText
         android:id="@+id/edit_workplace"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

@@ -178,7 +178,7 @@
                 app:layout_constraintBottom_toTopOf="@+id/separater_line3"
                 app:layout_constraintEnd_toStartOf="@+id/edit_workplace"
                 />
-            <com.furja.qc.view.ClearableEditTextWithIcon
+            <com.furja.qc.view.CleanableEditText
                 android:id="@+id/edit_workplace"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"

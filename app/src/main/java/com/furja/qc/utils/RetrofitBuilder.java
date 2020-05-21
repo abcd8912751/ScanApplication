@@ -2,12 +2,17 @@ package com.furja.qc.utils;
 
 import com.baronzhang.retrofit2.converter.FastJsonConverterFactory;
 import com.zhy.http.okhttp.log.LoggerInterceptor;
+
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 
+import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import retrofit2.Retrofit;
 import retrofit2.Retrofit.Builder;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
@@ -25,10 +30,8 @@ public class RetrofitBuilder{
         return RetrofitHolder.retrofitBuilder;
     }
 
-    public static <T> T getHelperByUrl(String baseUrl,Class<T> tClass)
-    {
-        builder
-                = RetrofitHolder.retrofitBuilder;
+    public static <T> T getHelperByUrl(String baseUrl,Class<T> tClass) {
+        builder = RetrofitHolder.retrofitBuilder;
         Retrofit retrofit
                 = builder
                 .baseUrl(baseUrl)
@@ -37,13 +40,11 @@ public class RetrofitBuilder{
     }
 
     public static RetrofitHelper getHelperByUrl(String baseUrl) {
-        return getHelperByUrl(baseUrl,RetrofitHelper.class);
+        return getHelperByUrl(baseUrl, RetrofitHelper.class);
     }
 
-    private static class  RetrofitHolder
-    {
-        static Builder retrofitBuilder
-                =getRetrofitBuilder();
+    private static class  RetrofitHolder {
+        static Builder retrofitBuilder = getRetrofitBuilder();
         private static Builder getRetrofitBuilder() {
             HttpsUtils.SSLParams sslParams
                     = HttpsUtils.getSslSocketFactory(null, null, null);
@@ -55,18 +56,30 @@ public class RetrofitBuilder{
             };
             OkHttpClient okHttpClient = new OkHttpClient.Builder()
                     .addInterceptor(new LoggerInterceptor(LOG_TAG))
+                    .addNetworkInterceptor(new HeaderInterceptor())
                     .sslSocketFactory(sslParams.sSLSocketFactory, sslParams.trustManager)
                     .hostnameVerifier(hostnameVerifier)
                     .connectTimeout(5, TimeUnit.SECONDS)
                     .writeTimeout(5, TimeUnit.SECONDS)
                     .readTimeout(15, TimeUnit.SECONDS)
                     .retryOnConnectionFailure(false)
-                    //其他配置
                     .build();
             return new Builder()
                     .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                     .addConverterFactory(FastJsonConverterFactory.create())
                     .client(okHttpClient);
+        }
+    }
+
+    /**
+     * 拦截添加Header
+     */
+    public static class HeaderInterceptor implements Interceptor {
+        @Override
+        public Response intercept(Chain chain) throws IOException {
+            Request request = chain.request().newBuilder()
+                    .addHeader("Connection","close").build();
+            return chain.proceed(request);
         }
     }
 }

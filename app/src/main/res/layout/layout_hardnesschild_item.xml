@@ -15,7 +15,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/edit_hardness"
         />
-    <androidx.appcompat.widget.AppCompatEditText
+    <com.furja.qc.view.CleanableEditText
         android:id="@+id/edit_hardness"
         android:inputType="numberDecimal"
         android:layout_width="0dp"

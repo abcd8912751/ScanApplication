@@ -6,6 +6,7 @@ import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.appcompat.widget.AppCompatEditText;
+import androidx.lifecycle.LifecycleOwner;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.KeyEvent;
@@ -21,6 +22,7 @@ import com.furja.qc.services.NetworkChangeReceiver;
 import com.furja.qc.utils.Constants;
 import com.furja.qc.utils.SharpBus;
 import com.furja.qc.utils.TextInputListener;
+import com.furja.qc.view.CleanableEditText;
 import com.furja.qc.view.SopRecyclerAdapter;
 import com.furja.qc.view.WrapLinearLayoutManager;
 import com.uber.autodispose.AutoDispose;
@@ -46,7 +48,7 @@ public class SopActivity extends BaseActivity  implements InjectionLogContract.V
     @BindView(R.id.text_materialModel)
     TextView textMaterialModel;
     @BindView(R.id.edit_barCode)
-    AppCompatEditText editBarCode;
+    CleanableEditText editBarCode;
     @BindView(R.id.materialInfo)
     ConstraintLayout materialInfoView;
     @BindView(R.id.recycler_sop)
@@ -153,6 +155,11 @@ public class SopActivity extends BaseActivity  implements InjectionLogContract.V
 
     @Override
     public Context getContext() {
+        return this;
+    }
+
+    @Override
+    public LifecycleOwner getLifeCycle() {
         return this;
     }
 

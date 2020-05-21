@@ -1,7 +1,20 @@
 package com.furja.qc.utils;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Build;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Looper;
+import android.os.Message;
+import android.provider.Settings;
+import android.telephony.TelephonyManager;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
@@ -12,15 +25,14 @@ import android.view.animation.TranslateAnimation;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.Toast;
-
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.alibaba.fastjson.JSON;
 import com.furja.qc.QcApplication;
 import com.furja.qc.R;
 import com.furja.qc.databases.BadMaterialLog;
-import com.furja.qc.databases.BadMaterialLogDao;
 import com.furja.qc.databases.BadTypeConfig;
 import com.furja.qc.databases.BadTypeConfigDao;
+import com.furja.qc.databases.DaoMaster;
 import com.furja.qc.databases.DaoSession;
 import com.furja.qc.databases.ProductModel;
 import com.furja.qc.databases.ProductModelDao;
@@ -35,7 +47,11 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 
 import io.reactivex.Observable;
@@ -53,24 +69,161 @@ import static com.furja.qc.utils.Constants.SYNCOVER_BADTYPE_CONFIG;
  */
 
 public class Utils {
+    public static DaoMaster daoMaster;
+    public static Handler toastHandler;
+    private static HandlerThread handlerThread;
+    public static final int TAG_TOAST_MESSAGE = 1232;
     public static void showLog(String msg) {
         Log.i(LOG_TAG,msg);
     }
+
+    /**
+     * 显示Toast
+     * @param msg
+     */
     public static void showToast(final String msg) {
         showLog(msg);
-        try {
-            Context toastContext = QcApplication.getContext();
-            if (Build.VERSION.SDK_INT>24) {
-                Toast toast=Toast.makeText(toastContext,null,Toast.LENGTH_SHORT);
-                toast.setText(msg);toast.show();
+        if (!TextUtils.isEmpty(msg)) {
+            if (isPrimaryThread()) {
+                showToastView(msg);
             }
-            else
-                AnimToast.makeText(toastContext,msg).show();
+            else if (toastHandler != null) {
+                Message message = toastHandler.obtainMessage();
+                message.what = TAG_TOAST_MESSAGE;
+                message.obj = msg;
+                toastHandler.sendMessage(message);
+            }
+        }
+    }
+
+    /**
+     * 初始化ToastHandler
+     */
+    public static void initToastHandler() {
+        handlerThread = new HandlerThread("ToastHandler");
+        handlerThread.start();
+        Looper looper = handlerThread.getLooper();
+        toastHandler = new Handler(looper, new Handler.Callback() {
+            @Override
+            public boolean handleMessage(Message msg) {
+                if(msg.what == TAG_TOAST_MESSAGE) {
+                    String message = textOf(msg.obj);
+                    showToastView(message);
+                }
+                return true;
+            }
+        });
+    }
+
+    /**
+     * 判断是否为主线程
+     * @return
+     */
+    public static boolean isPrimaryThread(){
+        return Looper.getMainLooper() == Looper.myLooper();
+    }
+
+    private static void showToastView(String msg) {
+        try {
+            Context context = QcApplication.getContext();
+            if (Build.VERSION.SDK_INT > 24) {
+                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
+            } else {
+                AnimToast.makeText(context, msg).show();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    /**
+     * 获取设备ID
+     * @return
+     */
+    @SuppressLint("MissingPermission")
+    public static String getDeviceID(){
+        String deviceID = "";
+        Context context = QcApplication.getContext();
+        try {
+            TelephonyManager telephonyMgr = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
+            deviceID=telephonyMgr.getDeviceId();
+        } catch (Exception e) {
+        }
+        if(!TextUtils.isEmpty(deviceID))
+            deviceID= "imei -> "+deviceID;
+        else {
+            try {
+                deviceID= Settings.Secure.getString(context.getContentResolver(), "android_id");
+                if(!TextUtils.isEmpty(deviceID))
+                    deviceID= "android_id -> "+deviceID;
+                else
+                    deviceID= "serialnumber -> "+android.os.Build.SERIAL;
+            } catch (Exception e) {
+            }
+        }
+        if(TextUtils.isEmpty(deviceID)) {
+            String ipAddress=getIPAddress();
+            if(!TextUtils.isEmpty(ipAddress))
+                deviceID = "ip -> " + ipAddress;
+        }
+        return deviceID;
+    }
+
+    public static String getIPAddress() {
+        Context context = QcApplication.getContext();
+        ConnectivityManager connectivityManager= (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo=connectivityManager.getActiveNetworkInfo();
+        String ipAddress="";
+        if(networkInfo!=null&&networkInfo.isAvailable()){
+            if (networkInfo.getType() == ConnectivityManager.TYPE_MOBILE) {    // 当前使用2G/3G/4G网络
+                try {
+                    for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements(); ) {
+                        NetworkInterface intf = en.nextElement();
+                        for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements(); ) {
+                            InetAddress inetAddress = enumIpAddr.nextElement();
+                            if (!inetAddress.isLoopbackAddress() && inetAddress instanceof Inet4Address)
+                                return inetAddress.getHostAddress();
+                        }
+                    }
+                } catch (Exception e) {
+                }
+            } else if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI) {    // 当前使用无线网络
+                WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+                ipAddress = intIP2StringIP(wifiInfo.getIpAddress());    // 得到IPV4地址
+            }
+        }
+        return ipAddress;
+    }
+
+    /**
+     * 将得到的int类型的IP转换为String类型
+     * @param ip
+     * @return
+     */
+    public static String intIP2StringIP(int ip) {
+        return (ip & 0xFF) + "." +
+                ((ip >> 8) & 0xFF) + "." +
+                ((ip >> 16) & 0xFF) + "." +
+                (ip >> 24 & 0xFF);
+    }
+
+
+    public static DaoSession getDaoSession() {
+        initDaoMaster();
+        return daoMaster.newSession();
+    }
+
+    /**
+     * 初始化GreenDao
+     */
+    private static synchronized void initDaoMaster() {
+        if(daoMaster==null){
+            DaoMaster.DevOpenHelper helper = new DaoMaster.DevOpenHelper(QcApplication.getContext(), "BadMaterialLog.db", null);
+            SQLiteDatabase db = helper.getWritableDatabase();
+            daoMaster = new DaoMaster(db);
+        }
+    }
 
     /**
      * 抖动自己
@@ -85,17 +238,7 @@ public class Utils {
         view.startAnimation(shakeAnimation);
     }
 
-    /**
-     * 将 BadMaterialLog 数据存至本地
-     * @param badMaterialLog
-     */
-    public static void saveToLocal(BadMaterialLog badMaterialLog) {
-        DaoSession daoSession= QcApplication.getDaoSession();
-        BadMaterialLogDao dao=daoSession.getBadMaterialLogDao();
-        dao.insertOrReplace(badMaterialLog);
-        showLog(badMaterialLog+": 已保存");
-        daoSession.clear();
-    }
+
 
 
 
@@ -134,7 +277,7 @@ public class Utils {
     public static void syncBadTypeConfig(final boolean isReset) {
         String badtypeUrl
                 = Constants.getBaseUrl()+ FURJA_BADTYPEBASIC_URL;
-        final DaoSession daoSession=QcApplication.getDaoSession();
+        final DaoSession daoSession=Utils.getDaoSession();
         final BadTypeConfigDao typeConfigDao=daoSession.getBadTypeConfigDao();
         final ProductModelDao productModelDao=daoSession.getProductModelDao();
         if(isReset) {
@@ -179,6 +322,8 @@ public class Utils {
                                             typeConfigDao.detachAll();
                                             SharpBus.getInstance().post(SYNCOVER_BADTYPE_CONFIG,true);
                                         }
+                                    },error->{
+                                        typeConfigDao.detachAll();
                                     });
                         }
                     }
@@ -230,42 +375,9 @@ public class Utils {
         return dialog;
     }
 
-    /**
-     * 从数据索取未上传的Log进行上传
-     * @return
-     */
-    public static List<BadMaterialLog> queryNotUploadLog() {
-        DaoSession daoSession= QcApplication.getDaoSession();
-        BadMaterialLogDao dao=daoSession.getBadMaterialLogDao();
-        List<BadMaterialLog> badLogs,
-                uploadLogs=new ArrayList<BadMaterialLog>();
-        badLogs=dao.loadAll();
-        if(badLogs!=null) {
-            for(BadMaterialLog badlog:badLogs) {
-                if (badlog.isUploaded())
-                    delete(badlog);
-                else
-                    uploadLogs.add(badlog);
-            }
-        }
-        daoSession.clear();
-        showLog("待上传的数据条数:"+uploadLogs.size());
-        return uploadLogs;
-    }
 
 
 
-    public static void delete(BadMaterialLog badMaterialLog) {
-        try {
-            DaoSession daoSession= QcApplication.getDaoSession();
-            BadMaterialLogDao dao=daoSession.getBadMaterialLogDao();
-            dao.delete(badMaterialLog);
-            showLog("已删除本次记录"+badMaterialLog.getMaterialISN());
-            daoSession.clear();
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-    }
 
     public static  <T> String textOf(T str){
         if (str == null)
@@ -348,32 +460,11 @@ public class Utils {
                 return 0;
     }
 
-
-    public static void fixInputMethodMemoryLeak(Context context) {
-        if (context == null)
-            return;
-        InputMethodManager inputMethodManager = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
-        if (inputMethodManager == null)
-            return;
-        String[] viewArr = new String[]{"mCurRootView", "mServedView", "mNextServedView", "mLastSrvView"};
-        Field field;
-        Object fieldObj;
-        for (String view : viewArr) {
-            try {
-                field = inputMethodManager.getClass().getDeclaredField(view);
-                if (!field.isAccessible()) {
-                    field.setAccessible(true);
-                }
-                fieldObj = field.get(inputMethodManager);
-                if (fieldObj != null && fieldObj instanceof View) {
-                    View fieldView = (View) fieldObj;
-                    if (fieldView.getContext() == context) {
-                        field.set(inputMethodManager, null);
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+    public static void destoryHandler(){
+        if(handlerThread!=null){
+            handlerThread.quit();
+            handlerThread = null;
+            toastHandler = null;
         }
     }
 }

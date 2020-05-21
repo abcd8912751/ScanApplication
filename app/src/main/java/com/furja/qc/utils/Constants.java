@@ -39,9 +39,9 @@ public class Constants {
     public static final String NODATA_AVAILABLE="没有找到符合条件的结果";
     public static final String OPERATOR_LOGIN_ERROR="账号或密码错误";
     public static final String TAG_SCAN_BARCODE="二维码扫描录入完成";
-    //为录入异常数据使用视图的标识,-1为没有设置
-    public static final int TYPE_BADLOG_WITHBTN=1;  //注塑车间
-    public static final int TYPE_BADLOG_WITHKEY=2;  //装配车间
+    //为录入异常数据使用视图的标识,-1为没有设置,1为注塑车间,2为装配车间
+    public static final int TYPE_BADLOG_WITHBTN=1;
+    public static final int TYPE_BADLOG_WITHKEY=2;
     public static final int TYPE_BADLOG_EMPTY=-1;
     public static final String UPLOAD_FINISH="uploadfinish";
     public static final String RESET_CONFIG="reset_config";
@@ -53,6 +53,7 @@ public class Constants {
     public static final String TAG_GOT_DIMENLOG="获取到注塑尺寸记录数据";
     public static final String ACTION_UPDATE_APK="UPDATE_APK";
     public static final String DIMENITEM_TOUCH ="点击了RecyclerView的ChildItem";
+    public static final String EXTRA_COMMONINFO ="EXTRA_COMMONINFO";
     public static final int TYPE_RULER_GAUGE =0;  //卡尺测试
     public static final int TYPE_PIN_GAUGE=1;    //针规测试
     public static final int TYPE_NODIMEN_GAUGE =2; //没实测值,试检具判断

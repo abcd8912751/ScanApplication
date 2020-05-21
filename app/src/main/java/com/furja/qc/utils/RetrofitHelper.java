@@ -13,15 +13,20 @@ import com.furja.qc.databases.TourInspectionLog;
 import com.furja.qc.jsonbeans.MaterialJson;
 
 import java.util.List;
+import java.util.Map;
 
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.http.Body;
+import retrofit2.http.FieldMap;
+import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.Headers;
+import retrofit2.http.Multipart;
 import retrofit2.http.POST;
+import retrofit2.http.PartMap;
 import retrofit2.http.Query;
 import retrofit2.http.Url;
 
@@ -78,4 +83,7 @@ public interface RetrofitHelper {
     @GET("base/passport")
     Observable<BaseHttpResponse<User>> login(@Query("username") String userName, @Query("password") String password);
 
+    @Multipart
+    @POST("FJBadTypeInterface/SendBadTypeLog/")
+    Observable<ResponseBody> postInjectionLog(@PartMap Map<String, RequestBody> uploadParams);
 }

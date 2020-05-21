@@ -21,6 +21,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
+import androidx.core.view.ViewCompat;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 
@@ -66,19 +67,22 @@ public class AnimToast {
         layoutParams.alpha=0.9f;
     }
 
-
+    /**
+     * 显示吐司
+     */
     public void show(){
-        if(!isShowing){//如果Toast没有显示，则开始加载显示
+        if(!isShowing){
             isShowing = true;
-            windowManager.addView(toastView, layoutParams);//将其加载到windowManager上
+            windowManager.addView(toastView, layoutParams);
             Observable.just(windowManager)
-                    .delay(1,TimeUnit.SECONDS)
+                    .delay(1, TimeUnit.SECONDS)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(aLong -> {
-                        if(toastView.isAttachedToWindow())
+                        if (ViewCompat.isAttachedToWindow(toastView)) {
                             windowManager.removeView(toastView);
+                        }
                         isShowing = false;
-                    },throwable -> {
+                    }, throwable -> {
                         throwable.printStackTrace();
                     });
         }

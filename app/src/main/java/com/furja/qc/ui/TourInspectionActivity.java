@@ -13,8 +13,8 @@ import androidx.constraintlayout.widget.Group;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import androidx.core.widget.NestedScrollView;
-import androidx.appcompat.widget.AppCompatEditText;
 import androidx.appcompat.widget.AppCompatTextView;
+import androidx.lifecycle.LifecycleOwner;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.text.Editable;
@@ -49,7 +49,7 @@ import com.furja.qc.utils.SharpBus;
 import com.furja.qc.utils.TextInputListener;
 import com.furja.qc.utils.Utils;
 import com.furja.qc.view.AutoCapTransitionMethod;
-import com.furja.qc.view.ClearableEditTextWithIcon;
+import com.furja.qc.view.CleanableEditText;
 import com.furja.qc.view.DatePickerWheel;
 import com.furja.qc.view.WheelView;
 import com.jaredrummler.materialspinner.MaterialSpinner;
@@ -75,6 +75,7 @@ import io.reactivex.disposables.Disposable;
 
 import static android.view.KeyEvent.KEYCODE_F7;
 import static com.furja.qc.beans.DefectiveReason.getReasonOfDefetive;
+import static com.furja.qc.utils.Constants.EXTRA_COMMONINFO;
 import static com.furja.qc.utils.Constants.INTERNET_ABNORMAL;
 import static com.furja.qc.utils.Constants.NODATA_AVAILABLE;
 import static com.furja.qc.utils.Constants.TAG_GOT_TOURLOG;
@@ -91,7 +92,7 @@ import static com.furja.qc.utils.Utils.textOf;
 
 public class TourInspectionActivity extends BaseActivity implements InjectionLogContract.View {
     @BindView(R.id.edit_barCode)
-    AppCompatEditText editBarCode;
+    CleanableEditText editBarCode;
     @BindView(R.id.text_materialName)
     TextView textMaterialName;
     @BindView(R.id.text_materialModel)
@@ -101,7 +102,7 @@ public class TourInspectionActivity extends BaseActivity implements InjectionLog
     @BindView(R.id.edit_moldCavity)
     MaterialSpinner editMoldCavity;
     @BindView(R.id.edit_workplace)
-    ClearableEditTextWithIcon editWorkplace;
+    CleanableEditText editWorkplace;
     @BindView(R.id.edit_moldNo)
     MaterialSpinner editMoldNo;
     @BindView(R.id.materialInfo)
@@ -123,9 +124,9 @@ public class TourInspectionActivity extends BaseActivity implements InjectionLog
     @BindView(R.id.shockTest_ng)
     RadioButton shockTestNg;
     @BindView(R.id.edit_standardCycle)
-    ClearableEditTextWithIcon editStandardCycle;
+    CleanableEditText editStandardCycle;
     @BindView(R.id.edit_actualCycle)
-    ClearableEditTextWithIcon editActualCycle;
+    CleanableEditText editActualCycle;
     @BindView(R.id.switch_appearanceQC)
     SwitchButton switchAppearanceQC;
     @BindView(R.id.switch_preassembly)
@@ -133,13 +134,13 @@ public class TourInspectionActivity extends BaseActivity implements InjectionLog
     @BindView(R.id.switch_shockTest)
     SwitchButton switchShockTest;
     @BindView(R.id.edit_nozzleRatio)
-    AppCompatEditText editNozzleRatio;
+    CleanableEditText editNozzleRatio;
     @BindView(R.id.edit_totalProduction)
-    ClearableEditTextWithIcon editTotalProduction;
+    CleanableEditText editTotalProduction;
     @BindView(R.id.edit_batchSubmission)
-    ClearableEditTextWithIcon editBatchSubmission;
+    CleanableEditText editBatchSubmission;
     @BindView(R.id.edit_sampleSize)
-    ClearableEditTextWithIcon editSampleSize;
+    CleanableEditText editSampleSize;
     @BindView(R.id.edit_numberOfDefective)
     EditText editNumberOfDefective;
     @BindView(R.id.group_preassembly)
@@ -361,7 +362,7 @@ public class TourInspectionActivity extends BaseActivity implements InjectionLog
                     bundle.setMoldNo(items.get(position));
                     bundle.setWorkingClass(spinnerClass.getText().toString());
                     bundle.setWorkplace(textOf(editWorkplace.getText()));
-                    intent.setData(Uri.parse(JSON.toJSONString(bundle)));
+                    intent.putExtra(EXTRA_COMMONINFO, bundle);
                     startActivity(intent);
                     finish();
                 })
@@ -598,11 +599,9 @@ public class TourInspectionActivity extends BaseActivity implements InjectionLog
     private void analyseIntent() {
         Intent intent=getIntent();
         if (intent !=null) {
-            String extraString = intent.getDataString();
-            if (!TextUtils.isEmpty(extraString)) {
+            CommonInfoBundle bundle = intent.getParcelableExtra(EXTRA_COMMONINFO);
+            if (bundle != null) {
                 try {
-                    CommonInfoBundle bundle
-                            = JSON.parseObject(extraString,CommonInfoBundle.class);
                     showMaterialInfo(bundle.getMaterialInfo());
                     editWorkplace.setText(bundle.getWorkplace());
                 } catch (Exception e) {
@@ -620,6 +619,11 @@ public class TourInspectionActivity extends BaseActivity implements InjectionLog
 
     @Override
     public Context getContext() {
+        return this;
+    }
+
+    @Override
+    public LifecycleOwner getLifeCycle() {
         return this;
     }
 
@@ -659,6 +663,7 @@ public class TourInspectionActivity extends BaseActivity implements InjectionLog
                 nestedScroll.smoothScrollTo(0, (int) editActualCycle.getY());
                 return true;
             }
+            String standardCycle = textOf(editStandardCycle.getText());
             if (TextUtils.isEmpty(editNozzleRatio.getText())
                     &&!checkNewStuff.isChecked()) {
                 showToast("水口比例为必填项,请记载");
@@ -726,13 +731,13 @@ public class TourInspectionActivity extends BaseActivity implements InjectionLog
             tourInspectionLog.setNumberOfDefective(numberOfDefective);
             tourInspectionLog.setMaterialISN(materialInfo.getMaterialISN());
             tourInspectionLog.setMoldCavity(editMoldCavity.getText().toString());
-            tourInspectionLog.setStandardCycle(editStandardCycle.getText().toString());
+            tourInspectionLog.setStandardCycle(standardCycle);
             tourInspectionLog.setActualCycle(editActualCycle.getText().toString());
             if(!checkNewStuff.isChecked())
                 tourInspectionLog.setNozzleRatio(editNozzleRatio.getText().toString());
             else
                 tourInspectionLog.setNozzleRatio("新料");
-            CharSequence sequence=editSolution.getText();
+            CharSequence sequence = editSolution.getText();
             if(!TextUtils.isEmpty(sequence)&&!sequence.toString().equals("请选择"))
                 tourInspectionLog.setSolution(sequence.toString());
             else
@@ -814,6 +819,7 @@ public class TourInspectionActivity extends BaseActivity implements InjectionLog
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(smeSize->{
                     if(smeSize>0) {
+
                         double numberOfDefective
                                 = doubleOf(editNumberOfDefective.getText());
                         if (numberOfDefective > smeSize)

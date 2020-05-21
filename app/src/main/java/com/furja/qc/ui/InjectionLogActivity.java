@@ -7,7 +7,8 @@ import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.widget.AppCompatEditText;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.widget.Toolbar;
@@ -34,8 +35,9 @@ import com.furja.qc.utils.HttpCallback;
 import com.furja.qc.utils.SharpBus;
 import com.furja.qc.utils.StatusBarUtils;
 import com.furja.qc.utils.TextInputListener;
+import com.furja.qc.utils.Utils;
 import com.furja.qc.view.AutoCapTransitionMethod;
-import com.furja.qc.view.ClearableEditTextWithIcon;
+import com.furja.qc.view.CleanableEditText;
 import com.nightonke.boommenu.BoomButtons.BoomButton;
 import com.nightonke.boommenu.BoomButtons.ButtonPlaceEnum;
 import com.nightonke.boommenu.BoomButtons.TextOutsideCircleButton;
@@ -59,6 +61,7 @@ import io.reactivex.disposables.Disposable;
 
 import static android.view.KeyEvent.KEYCODE_F7;
 import static com.furja.qc.utils.Constants.ACTION_UPDATE_APK;
+import static com.furja.qc.utils.Constants.EXTRA_COMMONINFO;
 import static com.furja.qc.utils.Constants.INTERNET_ABNORMAL;
 import static com.furja.qc.utils.Constants.NODATA_AVAILABLE;
 import static com.furja.qc.utils.Constants.RESET_CONFIG;
@@ -68,19 +71,20 @@ import static com.furja.qc.utils.Constants.UPDATE_BAD_COUNT;
 import static com.furja.qc.utils.TextInputListener.INPUT_ERROR;
 import static com.furja.qc.utils.Utils.showLog;
 import static com.furja.qc.utils.Utils.showToast;
+import static com.furja.qc.utils.Utils.textOf;
 
 public class InjectionLogActivity extends BaseActivity implements InjectionLogContract.View {
     InjectionLogPresenter presenter;
     @BindView(R.id.edit_barCode)
-    AppCompatEditText editBarCode;
+    CleanableEditText editBarCode;
     @BindView(R.id.materialInfo)
     ConstraintLayout materialInfoView;
     @BindView(R.id.text_date)
     TextView textDate;
     @BindView(R.id.edit_operator)
-    ClearableEditTextWithIcon editOperator;
+    CleanableEditText editOperator;
     @BindView(R.id.edit_workplace)
-    ClearableEditTextWithIcon editWorkplace;
+    CleanableEditText editWorkplace;
     @BindView(R.id.recycler_marker)
     RecyclerView recyclerMarker;
     @BindView(R.id.btn_undo_btnFrag)
@@ -111,7 +115,6 @@ public class InjectionLogActivity extends BaseActivity implements InjectionLogCo
         SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd");
         textDate.setText(formater.format(new Date(System.currentTimeMillis())));
         presenter = new InjectionLogPresenter(this);
-        clearSubView();
         AutoCapTransitionMethod autoCapMethod
                 = new AutoCapTransitionMethod();
         editWorkplace.setTransformationMethod(autoCapMethod);
@@ -197,6 +200,11 @@ public class InjectionLogActivity extends BaseActivity implements InjectionLogCo
             new InjectionAutoUpdateUtils(this, true)
                     .checkUpdate();
         }
+        materialInfoView
+                .setVisibility(View.GONE);
+        enableBarCodeInput();
+        presenter.resetFieldData();
+        textBadCount.setText("");
     }
 
     private int getTextRes(int i) {
@@ -207,9 +215,8 @@ public class InjectionLogActivity extends BaseActivity implements InjectionLogCo
         return getResorceID(i,true);
     }
 
-    private int getResorceID(int i,boolean isImage) {
-        switch (i)
-        {
+    private int getResorceID(int i, boolean isImage) {
+        switch (i) {
             case 1:
                 if (isImage)
                     return R.mipmap.ic_switch_src;
@@ -253,22 +260,15 @@ public class InjectionLogActivity extends BaseActivity implements InjectionLogCo
         }
     }
 
-    @OnTextChanged(value = R.id.edit_operator, callback = OnTextChanged.Callback.AFTER_TEXT_CHANGED)
-    public void editOperator(Editable s) {
-        if (s==null)
-            return;
-        String input = s.toString();
-        presenter.setOperator(input);
-    }
-
     @OnTextChanged(value = R.id.edit_workplace, callback = OnTextChanged.Callback.AFTER_TEXT_CHANGED)
     public void editWorkPlace(Editable s) {
         if (s == null || s.length()==0)
             return;
         String input = s.toString().toUpperCase();
         String pattern="^[A-F]\\d{0,2}$";
-        if(Pattern.matches(pattern,input))
+        if(Pattern.matches(pattern,input)) {
             presenter.setWorkPlace(input);
+        }
         else {
             showToast("输入的机台号与格式不符");
             editWorkplace.setText("");
@@ -287,8 +287,8 @@ public class InjectionLogActivity extends BaseActivity implements InjectionLogCo
                             = new Intent(InjectionLogActivity.this,TourInspectionActivity.class);
                     CommonInfoBundle bundle=new CommonInfoBundle();
                     bundle.setMaterialInfo(materialInfo);
-                    bundle.setWorkplace(editWorkplace.getText().toString());
-                    intent.setData(Uri.parse(JSON.toJSONString(bundle)));
+                    bundle.setWorkplace(textOf(editWorkplace.getText()));
+                    intent.putExtra(EXTRA_COMMONINFO, bundle);
                     startActivity(intent);
                     finish();
                 })
@@ -306,22 +306,23 @@ public class InjectionLogActivity extends BaseActivity implements InjectionLogCo
         }
     }
 
+
     private void clearSubView() {
         materialInfoView
                 .setVisibility(View.GONE);
         enableBarCodeInput();
         presenter.resetFieldData();
+        textBadCount.setText("");
         Editable editable = editOperator.getText();
-        if(editable==null)
+        if(editable == null)
             presenter.setOperator("");
         else
-            presenter.setOperator(editable.toString());
-        editable=editWorkplace.getText();
+            presenter.setOperator(textOf(editable));
+        editable = editWorkplace.getText();
         if(editable==null)
             presenter.setWorkPlace("");
         else
-            presenter.setWorkPlace(editable.toString().toUpperCase());
-        textBadCount.setText("");
+            presenter.setWorkPlace(textOf(editable).toUpperCase());
     }
 
     @Override
@@ -334,11 +335,11 @@ public class InjectionLogActivity extends BaseActivity implements InjectionLogCo
             materialInfoView.setVisibility(View.VISIBLE);
             textMaterialName.setText(materialInfo.getMaterialName());
             textMaterialModel.setText(materialInfo.getNorm());
-            editOperator.requestFocus();
-            if(TextUtils.isEmpty(editOperator.getText())) {
+            editWorkplace.requestFocus();
+            if(TextUtils.isEmpty(editWorkplace.getText())) {
                 InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
                 if(imm != null&&imm.isActive())
-                    imm.showSoftInput(editOperator,0);
+                    imm.showSoftInput(editWorkplace,0);
             }
         }
     }
@@ -358,6 +359,11 @@ public class InjectionLogActivity extends BaseActivity implements InjectionLogCo
 
     @Override
     public Context getContext() {
+        return this;
+    }
+
+    @Override
+    public LifecycleOwner getLifeCycle() {
         return this;
     }
 
@@ -393,7 +399,7 @@ public class InjectionLogActivity extends BaseActivity implements InjectionLogCo
 
     public void showAbortDialog(int itemId) {
         new MaterialDialog.Builder(this)
-                .title("离开这个星换一个时空")
+                .title("要离开这里")
                 .iconRes(R.mipmap.ic_planet)
                 .content("有数据尚未上传,就这样走吗?")
                 .positiveText("上传数据")
@@ -408,7 +414,8 @@ public class InjectionLogActivity extends BaseActivity implements InjectionLogCo
                         public void onFail(String errorMsg) {
                         }
                     });
-                    presenter.uploadLog(null);
+                    dialog = Utils.showWaitingDialog(getContext());
+                    presenter.uploadLog(dialog);
                 }).onNegative((dialog, which) -> {
                     dialog.cancel();
                     performAction(itemId);
@@ -537,9 +544,10 @@ public class InjectionLogActivity extends BaseActivity implements InjectionLogCo
         else {
             moveTaskToBack(true);
             showLog("返回了");
-            needUpdate=true;
+            needUpdate = true;
             disposable = Observable.just(0)
-                    .delay(30, TimeUnit.MINUTES)
+                    .delay(10, TimeUnit.MINUTES)
+                    .as(AutoDispose.autoDisposable(AndroidLifecycleScopeProvider.from(this)))
                     .subscribe(event->{
                         System.exit(0);
                     },error->{

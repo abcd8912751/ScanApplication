@@ -28,7 +28,6 @@ public class WrapLinearLayoutManager extends LinearLayoutManager {
         try {
             super.onLayoutChildren(recycler, state);
         } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 

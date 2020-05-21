@@ -6,7 +6,7 @@
     android:focusableInTouchMode="true"
     android:focusable="true"
     android:orientation="vertical">
-    <androidx.appcompat.widget.AppCompatEditText
+    <com.furja.qc.view.CleanableEditText
         android:id="@+id/edit_barCode"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

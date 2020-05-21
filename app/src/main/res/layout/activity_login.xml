@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
     <LinearLayout
         android:id="@+id/imageLinear_symbol"
         android:layout_width="match_parent"
@@ -23,12 +24,11 @@
             />
     </LinearLayout>
 
-    <com.furja.qc.view.ClearableEditTextWithIcon
+    <com.furja.qc.view.CleanableEditText
         android:id="@+id/edit_login_operator"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@mipmap/edittext_white_normal"
-        android:layout_marginTop="@dimen/login_input_margin"
         android:layout_marginLeft="@dimen/login_horizontal_margin"
         android:layout_marginRight="@dimen/login_horizontal_margin"
         android:layout_marginBottom="@dimen/login_input_margin"
@@ -44,7 +44,7 @@
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
         app:layout_constraintTop_toBottomOf="@+id/imageLinear_symbol"/>
 
-    <com.furja.qc.view.ClearableEditTextWithIcon
+    <com.furja.qc.view.CleanableEditText
         android:id="@+id/edit_login_password"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -88,4 +88,4 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/auto_login_checked"
         style="@style/ButtonLogin"/>
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

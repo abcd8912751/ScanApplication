@@ -54,7 +54,7 @@
     <string name="label_totalProduction">生产总数</string>
     <string name="label_finalJudgment">最终判定</string>
     <string name="label_apperanceQC">外观检验</string>
-    <string name="hint_standardCycle">标准周期(可不填)</string>
+    <string name="hint_standardCycle">请输入标准周期</string>
     <string name="hint_actualCycle">请输入实际周期</string>
     <string name="promot_apperanceQC">显示记录板</string>
     <string name="hint_totalProduction">请输入生产总数</string>

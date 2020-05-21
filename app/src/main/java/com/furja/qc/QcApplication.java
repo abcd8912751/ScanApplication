@@ -2,7 +2,9 @@ package com.furja.qc;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.StrictMode;
 import android.text.TextUtils;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
@@ -13,13 +15,13 @@ import com.furja.qc.beans.Preferences;
 import com.furja.qc.services.ScanAndAlarmReceiver;
 import com.furja.qc.services.MyCrashHandler;
 import com.furja.qc.services.NetworkChangeReceiver;
-import com.furja.qc.utils.IMMLeaks;
-import com.squareup.leakcanary.LeakCanary;
+import com.furja.qc.utils.Utils;
 import com.zhy.http.okhttp.OkHttpUtils;
 import com.zhy.http.okhttp.log.LoggerInterceptor;
 import java.util.concurrent.TimeUnit;
 import io.reactivex.Observable;
 import io.reactivex.functions.Consumer;
+import io.reactivex.plugins.RxJavaPlugins;
 import okhttp3.OkHttpClient;
 import static com.furja.qc.utils.Constants.LOG_TAG;
 import static com.furja.qc.utils.Constants.TYPE_BADLOG_WITHBTN;
@@ -32,6 +34,7 @@ import static com.furja.qc.utils.Utils.showLog;
 public class QcApplication extends Application {
     private static volatile Context context;
     private static User user;   //当前已登录用户
+    private static DaoMaster daoMaster;
     public static QcApplication getInstance()
     {
         return (QcApplication) context;
@@ -59,7 +62,7 @@ public class QcApplication extends Application {
     }
 
     /**
-     * 将员工用户信息存储
+     * 将用户信息存储
      * @param user
      */
     public static void setUserAndSave(User user) {
@@ -83,11 +86,6 @@ public class QcApplication extends Application {
                         initSomeFrameWork();
                     }
                 });
-        if (LeakCanary.isInAnalyzerProcess(this)) {
-            return;
-        }
-        LeakCanary.install(this);
-        IMMLeaks.fixFocusedViewLeak(this);
     }
 
     /**
@@ -101,29 +99,42 @@ public class QcApplication extends Application {
                 //其他配置
                 .build();
         OkHttpUtils.initClient(okHttpClient);
-        MyCrashHandler.init();
+        MyCrashHandler.init(context);
         NetworkChangeReceiver.init(this);   //注册网络接收器
-        if (Preferences.getSourceType()==TYPE_BADLOG_WITHBTN)
+        if (Preferences.getSourceType() == TYPE_BADLOG_WITHBTN) {
             ScanAndAlarmReceiver.registerAlarm(context);
+        }
+        RxJavaPlugins.setErrorHandler(throwable -> {
+            MyCrashHandler.getInstance().postError(throwable);
+        });
+        Utils.initToastHandler();
     }
 
     /**
-     * 初始化GreenDao
+     * APP异常时记录日志并重启
      */
-    private static DaoMaster initDaoMaster() {
-        DaoMaster.DevOpenHelper helper = new DaoMaster.DevOpenHelper(QcApplication.getContext(), "BadMaterialLog.db", null);
-        SQLiteDatabase db = helper.getWritableDatabase();
-        return new DaoMaster(db);   //获取唯一DaoMaster对象
-    }
-
-    public static DaoSession getDaoSession() {
-        return initDaoMaster().newSession();
+    public void restartApp() {
+        Intent launchIntent = getPackageManager().getLaunchIntentForPackage(getPackageName());
+        launchIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        Observable.just(launchIntent)
+                .delay(1, TimeUnit.SECONDS)
+                .subscribe(new Consumer<Intent>() {
+                    @Override
+                    public void accept(Intent intent) throws Exception {
+                        startActivity(intent);
+                        android.os.Process
+                                .killProcess(android.os.Process.myPid());
+                    }
+                },error->{
+                    error.printStackTrace();
+                });
     }
 
     @Override
     public void onTerminate() {
         super.onTerminate();
         NetworkChangeReceiver.unregister();
+        Utils.destoryHandler();
     }
 
 }

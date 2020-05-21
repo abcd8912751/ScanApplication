@@ -2,6 +2,8 @@ package com.furja.qc.presenter;
 
 import android.accounts.NetworkErrorException;
 import androidx.annotation.NonNull;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
 import androidx.recyclerview.widget.RecyclerView;
 import android.text.InputType;
 import android.text.TextUtils;
@@ -12,10 +14,12 @@ import android.widget.ImageButton;
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.alibaba.fastjson.JSON;
+import com.baronzhang.retrofit2.converter.FastJsonConverterFactory;
 import com.furja.qc.R;
 import com.furja.qc.beans.BadLogEntry;
 import com.furja.qc.beans.DimenGroupItem;
 import com.furja.qc.beans.MaterialInfo;
+import com.furja.qc.databases.BadMaterialLog;
 import com.furja.qc.databases.DimenGaugeLog;
 import com.furja.qc.databases.TourInspectionLog;
 import com.furja.qc.contract.InjectionLogContract;
@@ -32,16 +36,36 @@ import com.furja.qc.utils.RetryWhenUtils;
 import com.furja.qc.utils.SharpBus;
 import com.furja.qc.utils.Utils;
 import com.furja.qc.view.LogViewHolder;
+import com.uber.autodispose.AutoDispose;
+import com.uber.autodispose.android.lifecycle.AndroidLifecycleScopeProvider;
 import com.zhy.http.okhttp.OkHttpUtils;
 import com.zhy.http.okhttp.callback.StringCallback;
+import com.zhy.http.okhttp.request.PostFormRequest;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Action;
+import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import okhttp3.RequestBody;
+import okhttp3.Response;
+import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
+
 import static com.furja.qc.utils.Constants.FURJA_UPLOAD_URL;
 import static com.furja.qc.utils.Constants.INTERNET_ABNORMAL;
 import static com.furja.qc.utils.Constants.NODATA_AVAILABLE;
@@ -64,6 +88,8 @@ public class InjectionLogPresenter implements InjectionLogContract.Presenter {
     Integer[] defetiveReasons;  //造成不良原因的数组
     TourInspectionLog tourInspectionLog;
     DimenGaugeLog dimenGaugeLog;
+    LifecycleOwner lifecycleOwner;
+    Disposable disposable;
     boolean isEditing = false,isTourInspection = false; //isTourInspection为true时,点击MarkerButton不检测输入
 
     public InjectionLogPresenter(InjectionLogContract.View view) {
@@ -71,19 +97,20 @@ public class InjectionLogPresenter implements InjectionLogContract.Presenter {
         injectionlogModel = new InjectionLogModel();
         myRecyclerAdapter = new MyRecyclerAdapter();
         caretaker = new Caretaker();
-        resetFieldData();
         injectlogView
                 .setButtonClickListener(new BtnClickListener());
         injectlogView
                 .setRecyclerAdapter(myRecyclerAdapter);
         sharpBus = SharpBus.getInstance();
+        lifecycleOwner = view.getLifeCycle();
+        resetFieldData();
     }
 
     /**
      * 显示确定提交的对话框
      */
     public void submitWithConfirm() {
-        new MaterialDialog.Builder(injectlogView.getContext())
+        MaterialDialog materialDialog = new MaterialDialog.Builder(injectlogView.getContext())
                 .title("提交数据")
                 .content("确定要提交数据吗?")
                 .positiveText("确定")
@@ -96,8 +123,10 @@ public class InjectionLogPresenter implements InjectionLogContract.Presenter {
                             .setVisibility(View.GONE);
                     dialog.getActionButton(DialogAction.NEGATIVE)
                             .setVisibility(View.GONE);
-                }).onNegative((dialog, which) -> {dialog.cancel();}).show()
-                .getWindow().setBackgroundDrawableResource(R.drawable.shape_dialog_bg);
+                }).onNegative((dialog, which) -> {
+                    dialog.cancel();
+                }).show();
+        materialDialog.getWindow().setBackgroundDrawableResource(R.drawable.shape_dialog_bg);
     }
 
     /**
@@ -105,31 +134,46 @@ public class InjectionLogPresenter implements InjectionLogContract.Presenter {
      * 通过injectlogView是哪个实例的方法提交不同的数据
      */
     private void submitData(MaterialDialog dialog) {
+        RetrofitHelper helper = RetrofitBuilder.getHelperByUrl(getVertxUrl());
         if(injectlogView instanceof TourInspectionActivity) {
             RequestBody requestBody = Utils.getRequestBody(tourInspectionLog);
-            RetrofitBuilder.getHelperByUrl(getVertxUrl(),RetrofitHelper.class)
-                    .postTourInspectionLog(requestBody)
+            helper.postTourInspectionLog(requestBody)
                     .subscribeOn(Schedulers.io())
                     .retryWhen(RetryWhenUtils.create())
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(stringResponse->{
+                    .subscribe(stringResponse -> {
                         dialog.cancel();
                         showToast(stringResponse.getResult());
-                        if(stringResponse.getCode()>0)
+                        if (stringResponse.getCode() > 0) {
                             injectlogView.resetView();
-                    },throwable -> {
-                        if(throwable instanceof NetworkErrorException)
+                        }
+                        if (disposable != null) {
+                            showLog("解注册TourInspectLogActivity");
+                            disposable.dispose();
+                        }
+                    }, throwable -> {
+                        if (throwable instanceof NetworkErrorException) {
                             showToast(INTERNET_ABNORMAL);
+                        }
                         dialog.cancel();
+                    }, new Action() {
+                        @Override
+                        public void run() throws Exception {
+                        }
+                    }, new Consumer<Disposable>() {
+                        @Override
+                        public void accept(Disposable d) throws Exception {
+                            disposable = d;
+                        }
                     });
         }
-        else if(injectlogView instanceof DimenLogActivity){
+        else if(injectlogView instanceof DimenLogActivity) {
             RequestBody requestBody = Utils.getRequestBody(dimenGaugeLog);
-            RetrofitBuilder.getHelperByUrl(getVertxUrl(),RetrofitHelper.class)
-                    .postDimenGaugeLog(requestBody)
+            helper.postDimenGaugeLog(requestBody)
                     .subscribeOn(Schedulers.io())
                     .retryWhen(RetryWhenUtils.create())
                     .observeOn(AndroidSchedulers.mainThread())
+                    .as(AutoDispose.autoDisposable(AndroidLifecycleScopeProvider.from(lifecycleOwner)))
                     .subscribe(stringResponse->{
                         if(stringResponse.getCode()>0)
                             injectlogView.resetView();
@@ -156,11 +200,12 @@ public class InjectionLogPresenter implements InjectionLogContract.Presenter {
     public void acquireDimenLog(String materialISN, String produceDate,
                                 String timePeriod, String moldNo, String type) {
         RetrofitHelper helper
-                = RetrofitBuilder.getHelperByUrl(getVertxUrl(),RetrofitHelper.class);
+                = RetrofitBuilder.getHelperByUrl(getVertxUrl());
         helper.getDimenGaugeLog(materialISN,produceDate,timePeriod,moldNo,type)
                 .subscribeOn(Schedulers.io())
                 .retryWhen(RetryWhenUtils.create())
                 .observeOn(AndroidSchedulers.mainThread())
+                .as(AutoDispose.autoDisposable(AndroidLifecycleScopeProvider.from(lifecycleOwner)))
                 .subscribe(dimenLogResponse->{
                     if(dimenLogResponse.getCode()>0) {
                         DimenGaugeLog dimenLog = dimenLogResponse.getResult();
@@ -199,8 +244,7 @@ public class InjectionLogPresenter implements InjectionLogContract.Presenter {
                 });
     }
 
-    private class MyRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
-    {
+    private class MyRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View view= LayoutInflater.from(parent.getContext())
@@ -274,9 +318,7 @@ public class InjectionLogPresenter implements InjectionLogContract.Presenter {
     public class BtnClickListener implements View.OnClickListener {
         @Override
         public void onClick(View v) {
-            switch (v.getId())
-            {
-                //undo按钮
+            switch (v.getId()) {
                 case R.id.btn_undo_btnFrag:
                     List<Long> codeCounts=caretaker.getUndoMemo();
                     if(codeCounts!=null) {
@@ -285,7 +327,6 @@ public class InjectionLogPresenter implements InjectionLogContract.Presenter {
                         myRecyclerAdapter.notifyDataSetChanged();
                     }
                     break;
-                //redo按钮
                 case R.id.btn_redo_btnFrag:
                     List<Long> counts=caretaker.getRedoMemo(injectionlogModel.getMarkCountString());
                     if(counts!=null) {
@@ -322,7 +363,6 @@ public class InjectionLogPresenter implements InjectionLogContract.Presenter {
                                             .setVisibility(View.GONE);
                                     dialog.getActionButton(DialogAction.NEGATIVE)
                                             .setVisibility(View.GONE);
-                                    showLog(injectionlogModel.getBadMaterialLog().toUploadString());
                                     uploadLog(dialog);
                                 }).show().getWindow()
                                 .setBackgroundDrawableResource(R.drawable.shape_dialog_bg);
@@ -335,14 +375,15 @@ public class InjectionLogPresenter implements InjectionLogContract.Presenter {
     public void acquireTourLog(String materialISN,String produceDate,
                                String timePeriod,String moldNo) {
         RetrofitHelper helper
-                = RetrofitBuilder.getHelperByUrl(getVertxUrl(),RetrofitHelper.class);
+                = RetrofitBuilder.getHelperByUrl(getVertxUrl(), RetrofitHelper.class);
         helper.getTourInspectionLog(materialISN,produceDate,timePeriod,moldNo)
                 .subscribeOn(Schedulers.io())
                 .retryWhen(RetryWhenUtils.create())
                 .observeOn(AndroidSchedulers.mainThread())
+                .as(AutoDispose.autoDisposable(AndroidLifecycleScopeProvider.from(lifecycleOwner)))
                 .subscribe(tourLogResponse->{
-                    if(tourLogResponse.getCode()>0) {
-                        TourInspectionLog tourLog=tourLogResponse.getResult();
+                    if(tourLogResponse.getCode() > 0) {
+                        TourInspectionLog tourLog = tourLogResponse.getResult();
                         if (tourLog.getFID()>0) {
                             MaterialDialog materialDialog = new MaterialDialog.Builder(injectlogView.getContext())
                                     .title("该物料在所示时段已作记录")
@@ -355,70 +396,91 @@ public class InjectionLogPresenter implements InjectionLogContract.Presenter {
                             materialDialog.getWindow()
                                     .setBackgroundDrawableResource(R.drawable.shape_dialog_bg);
                         }
-                        else
+                        else {
                             sharpBus.post(TAG_GOT_TOURLOG, tourLog);
+                        }
                     }
                 },error->{
                     error.printStackTrace();
                 });
     }
 
-    public void uploadLog(MaterialDialog dialog) {
-        if (dialog == null)
-            dialog= Utils.showWaitingDialog(injectlogView.getContext());
-        String uploadUrl= Constants.getBaseUrl()+ FURJA_UPLOAD_URL;
-        Map<String, String> uploadParams
-                = injectionlogModel.getBadMaterialLog().getUploadParams();
-        MaterialDialog finalDialog = dialog;
-        OkHttpUtils
-                .post()
-                .url(uploadUrl)
-                .params(uploadParams)
-                .build()
-                .execute(new StringCallback() {
-                    @Override
-                    public void onError(Call call, Exception e, int i) {
-                        showToast(INTERNET_ABNORMAL);
-                        finalDialog.cancel();
-                        if(httpCallback!=null)
-                            httpCallback.onFail(INTERNET_ABNORMAL);
-                    }
-                    @Override
-                    public void onResponse(String responce, int i) {
-                        finalDialog.cancel();
-                        checkUploadSuccessAndSave(responce);
-                    }
-                    /**
-                     * 根据返回的Json检验是否上传成功
-                     *  如果上传成功则更新存入本地数据库
-                     *  在网络异常时未上传成功需考虑定时上传
-                     */
-                    private void checkUploadSuccessAndSave(String responce) {
-                        UploadDataJson uploadDataJson
-                                = JSON.parseObject(responce,UploadDataJson.class);
-                        if(uploadDataJson!=null&&uploadDataJson.getErrCode()==100) {
-                            showToast(uploadDataJson.getErrMsg());
-                            if(httpCallback!=null)
-                                httpCallback.onSuccess("ok");
-                            else {
-                                injectlogView.resetView();
-                                myRecyclerAdapter.notifyDataSetChanged();
-                            }
-                        }
-                        else {
-                            showToast("上传失败,请重试");
-                            if(httpCallback!=null)
-                                httpCallback.onFail("上传失败");
-                        }}
+    /**
+     * 上传InjectionLog日志
+     * @param finalDialog
+     */
+    public void uploadLog(final MaterialDialog finalDialog) {
+        BadMaterialLog badMaterialLog = injectionlogModel.getBadMaterialLog();
+        Map<String, String> uploadParams = badMaterialLog.getUploadParams();
+        Map<String, RequestBody> requestBodyMap = generateRequestBody(uploadParams);
+        String baseUrl = Constants.getBaseUrl();
+        RetrofitHelper helper = RetrofitBuilder.getHelperByUrl(baseUrl);
+        helper.postInjectionLog(requestBodyMap)
+                .subscribeOn(Schedulers.io())
+                .retryWhen(RetryWhenUtils.create())
+                .observeOn(AndroidSchedulers.mainThread())
+                .as(AutoDispose.autoDisposable(AndroidLifecycleScopeProvider.from(lifecycleOwner)))
+                .subscribe(responseBody->{
+                    finalDialog.cancel();
+                    String response = responseBody.string();
+                    checkUploadSuccessAndSave(response);
+                }, error -> {
+                    showToast(INTERNET_ABNORMAL);
+                    finalDialog.cancel();
+                    if (httpCallback != null)
+                        httpCallback.onFail(INTERNET_ABNORMAL);
                 });
     }
+
+    /**
+     * 转换为 form-data
+     * @param requestDataMap
+     * @return
+     */
+    public static Map<String, RequestBody> generateRequestBody(Map<String, String> requestDataMap) {
+        Map<String, RequestBody> requestBodyMap = new HashMap<>();
+        for (String key : requestDataMap.keySet()) {
+            String value = requestDataMap.get(key);
+            RequestBody requestBody = RequestBody.create(MediaType.parse("multipart/form-data"),
+                    value == null ? "" : value);
+            requestBodyMap.put(key, requestBody);
+        }
+        return requestBodyMap;
+    }
+
+    /**
+     * 根据返回的Json检验是否上传成功
+     *  如果上传成功则更新存入本地数据库
+     *  在网络异常时未上传成功需考虑定时上传
+     */
+    private void checkUploadSuccessAndSave(String responce) {
+        UploadDataJson uploadDataJson
+                = JSON.parseObject(responce,UploadDataJson.class);
+        if(uploadDataJson!=null&&uploadDataJson.getErrCode()==100) {
+            showToast(uploadDataJson.getErrMsg());
+            if(httpCallback!=null)
+                httpCallback.onSuccess("ok");
+            else {
+                injectlogView.resetView();
+                myRecyclerAdapter.notifyDataSetChanged();
+            }
+        }
+        else {
+            showToast("上传失败,请重试");
+            if(httpCallback!=null)
+                httpCallback.onFail("上传失败");
+        }}
+
+    /**
+     * 重置部分字段数据
+     */
     @Override
     public void resetFieldData() {
-        injectionlogModel.resetFieldData();
         myRecyclerAdapter.notifyDataSetChanged();
         caretaker.clear();
         dimenGaugeLog = new DimenGaugeLog();
         tourInspectionLog = new TourInspectionLog();
+        injectionlogModel.resetFieldData();
     }
 
 
@@ -436,11 +498,12 @@ public class InjectionLogPresenter implements InjectionLogContract.Presenter {
 
     public void acquireMaterialInfo(String scanString) {
         RetrofitHelper helper
-                =RetrofitBuilder.getHelperByUrl(getHttpsUrl(),RetrofitHelper.class);
+                =RetrofitBuilder.getHelperByUrl(getHttpsUrl(), RetrofitHelper.class);
         helper.getMaterialJson(scanString)
                 .subscribeOn(Schedulers.io())
                 .retryWhen(new RetryWhenUtils())
                 .observeOn(AndroidSchedulers.mainThread())
+                .as(AutoDispose.autoDisposable(AndroidLifecycleScopeProvider.from(lifecycleOwner)))
                 .subscribe(materialJson -> {
                     MaterialInfo info=new MaterialInfo(materialJson);
                     injectionlogModel.setMaterialISN(info.getMaterialISN());
@@ -514,8 +577,7 @@ public class InjectionLogPresenter implements InjectionLogContract.Presenter {
         moldList.addAll(letterLst);
         return moldList;
     }
-    public List<String> getClassLst()
-    {
+    public List<String> getClassLst() {
         return Arrays
                 .asList("甲1班","甲2班","甲3班","乙1班","乙2班","乙3班");
     }

@@ -3,9 +3,8 @@ package com.furja.qc.beans;
 import android.text.TextUtils;
 
 /**
- * 操作员使用员工号数据库进行登录审核
+ * 用户基类
  */
-
 public class User {
     private String userName;
     private String userId;

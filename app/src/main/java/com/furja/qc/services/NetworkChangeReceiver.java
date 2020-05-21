@@ -9,6 +9,7 @@ import android.net.NetworkInfo;
 
 import com.furja.qc.utils.RetrofitBuilder;
 import com.furja.qc.utils.RetrofitHelper;
+import com.furja.qc.utils.RetryWhenUtils;
 
 import java.util.concurrent.Callable;
 import io.reactivex.Observable;
@@ -74,6 +75,7 @@ public class NetworkChangeReceiver extends BroadcastReceiver {
     public void checkInnerNetwork() {
         RetrofitHelper helper = RetrofitBuilder.getHelperByUrl(VERTX_INNER_URL);
         helper.request(VERTX_INNER_URL)
+                .retryWhen(RetryWhenUtils.create())
                 .subscribe(responseBody -> {
                     NetworkChangeReceiver.isInnerNet = true;
                     showLog("网络状态变化为内网");

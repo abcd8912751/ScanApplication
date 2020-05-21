@@ -23,6 +23,7 @@ import java.util.concurrent.Callable;
 
 import io.reactivex.Observable;
 import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 
 import static com.furja.qc.utils.Constants.TYPE_BADLOG_WITHBTN;
 import static com.furja.qc.utils.Constants.UPDATE_BAD_COUNT;
@@ -36,55 +37,11 @@ public class InjectionLogModel implements InjectionLogContract.Model {
     private BadMaterialLog badMaterialLog;
 
     public InjectionLogModel() {
-        Observable.fromCallable(new Callable<List<BadTypeConfig>>() {
-            @Override
-            public List<BadTypeConfig> call() throws Exception {
-                DaoSession daoSession=QcApplication.getDaoSession();
-                BadTypeConfigDao typeConfigDao
-                        =daoSession.getBadTypeConfigDao();
-                List<BadTypeConfig> allResults=typeConfigDao.queryBuilder()
-                        .where(BadTypeConfigDao.Properties.SourcType.eq(1))
-                        .list();
-//                daoSession.clear();
-                if(allResults!=null)
-                    return allResults;
-                else
-                    return Collections.EMPTY_LIST;
-            }})
-                .subscribe(new Consumer<List<BadTypeConfig>>() {
-                    @Override
-                    public void accept(List<BadTypeConfig> badTypeConfigs) throws Exception {
-                        int list_size=badTypeConfigs.size();
-                        btn_titles = readBtn_titles(badTypeConfigs, list_size);
-                    }
 
-                    /**
-                     * 获取MarkerButton的label文本
-                     * @param badTypeConfigs
-                     * @param list_size
-                     * @return
-                     */
-                    @NonNull
-                    private String[] readBtn_titles(List<BadTypeConfig> badTypeConfigs, int list_size) {
-                        String[] btn_titles;
-                        if(list_size>0) {
-                            btn_titles=new String[list_size];
-                            for(int i=0;i<list_size;i++) {
-                                BadTypeConfig typeConfig=badTypeConfigs.get(i);
-                                btn_titles[i]=typeConfig.getTypeDesp();
-                            }
-                        }
-                        else {
-                            //如果本地数据库没有相应数据使用默认配置信息
-                            showLog("没有找到相应异常配置信息");
-                            Context context= QcApplication.getContext();
-                            btn_titles
-                                    = context.getResources().getStringArray(R.array.operate_options);
-                        }
-                        return btn_titles;
-                    }
-                });
     }
+
+
+
 
     /**
      * 判断物料代码是否为空
@@ -97,17 +54,13 @@ public class InjectionLogModel implements InjectionLogContract.Model {
     }
 
     /**
-     * 判断物料tiaoma、员工号、机台号中是否有空的情况
+     * 判断物料tiaoma、机台号中是否有空的情况
      */
     public boolean infoHasNull() {
         if(badMaterialLog==null)
             return true;
         if(ISNisNull()) {
             showToast("设置物料代码后方可记录");
-            return true;
-        }
-        if(TextUtils.isEmpty(badMaterialLog.getOperatorId())) {
-            showToast("设置员工号后方可记录");
             return true;
         }
         if(TextUtils.isEmpty(badMaterialLog.getWorkPlaceId())) {
@@ -133,15 +86,17 @@ public class InjectionLogModel implements InjectionLogContract.Model {
     private void initArrays() {
         markCounts=new ArrayList<Long>();
         badcodes= new ArrayList<String>();
-        for(int i = 0; i< getItemCount(); i++) {
+        int length = getItemCount();
+        for(int i = 0; i< length; i++) {
             markCounts.add( 0L);
             badcodes.add(i+"");
         }
+        updateData(new WorkOrderInfo());
     }
 
     @Override
     public int getItemCount() {
-        return btn_titles.length;
+        return btn_titles==null?0:btn_titles.length;
     }
 
     @Override
@@ -170,7 +125,7 @@ public class InjectionLogModel implements InjectionLogContract.Model {
     }
 
     /**
-     * 将物料、工号、员工号等信息传入更新视图数据
+     * 将物料、工号等信息传入更新视图数据
      * @param workOrderInfo
      */
     @Override
@@ -197,26 +152,6 @@ public class InjectionLogModel implements InjectionLogContract.Model {
     }
 
 
-
-    /**
-     * 同步至本地
-     */
-    public void syncToLocal() {
-        if(badMaterialLog ==null)
-            showLog(getClass()+"->当前执有的BadMaterialLog数据库为空,不予保存");
-        else {
-            badMaterialLog.setLongBadCounts(markCounts);
-            badMaterialLog.setBadCount(getTotalBad());
-            if(badcodes==null) {
-                badcodes=new ArrayList<String>();
-                for(int i=0;i<markCounts.size();i++)
-                    badcodes.add(i+"");
-            }
-            badMaterialLog.setBadTypeCode(badcodes);
-            Utils.saveToLocal(badMaterialLog);
-        }
-    }
-
     /**
      * 获取品质异常数据库基类
      * @return
@@ -237,8 +172,7 @@ public class InjectionLogModel implements InjectionLogContract.Model {
      */
     public String getMarkCountString() {
         StringBuffer stringBuffer=new StringBuffer();
-        for(Long entity:markCounts)
-        {
+        for(Long entity:markCounts) {
             stringBuffer.append(entity);
             stringBuffer.append(",");
         }
@@ -259,8 +193,12 @@ public class InjectionLogModel implements InjectionLogContract.Model {
     }
 
     public void resetFieldData() {
-        initArrays();
-        updateData(new WorkOrderInfo());
+        if(btn_titles==null){
+            readBtnTitlesFromLocal();
+        }
+        else {
+            initArrays();
+        }
     }
 
     public List<BadLogEntry> getBadLogEntries() {
@@ -295,5 +233,62 @@ public class InjectionLogModel implements InjectionLogContract.Model {
             }
         }
         SharpBus.getInstance().post(UPDATE_BAD_COUNT, getTotalBad());
+    }
+
+    /**
+     * 从本地数据库或Resource读取按钮标题
+     */
+    private void readBtnTitlesFromLocal() {
+        Observable.fromCallable(new Callable<List<BadTypeConfig>>() {
+            @Override
+            public List<BadTypeConfig> call() throws Exception {
+                DaoSession daoSession= Utils.getDaoSession();
+                BadTypeConfigDao typeConfigDao
+                        =daoSession.getBadTypeConfigDao();
+                List<BadTypeConfig> allResults=typeConfigDao.queryBuilder()
+                        .where(BadTypeConfigDao.Properties.SourcType.eq(1))
+                        .list();
+                daoSession.clear();
+                if(allResults!=null)
+                    return allResults;
+                else
+                    return Collections.EMPTY_LIST;
+            }}).subscribeOn(Schedulers.io())
+                .subscribe(new Consumer<List<BadTypeConfig>>() {
+            @Override
+            public void accept(List<BadTypeConfig> badTypeConfigs) throws Exception {
+                int list_size = badTypeConfigs.size();
+                btn_titles = readTitles(badTypeConfigs, list_size);
+                initArrays();
+            }
+
+            /**
+             * 获取MarkerButton的label文本
+             * @param badTypeConfigs
+             * @param list_size
+             * @return
+             */
+            @NonNull
+            private String[] readTitles(List<BadTypeConfig> badTypeConfigs, int list_size) {
+                String[] btn_titles;
+                if (list_size > 0) {
+                    btn_titles = new String[list_size];
+                    for (int i = 0; i < list_size; i++) {
+                        BadTypeConfig typeConfig = badTypeConfigs.get(i);
+                        btn_titles[i] = typeConfig.getTypeDesp();
+                    }
+                } else {
+                    //如果本地数据库没有相应数据使用默认配置信息
+                    showLog("没有找到相应异常配置信息");
+                    Context context= QcApplication.getContext();
+                    btn_titles = context.getResources().getStringArray(R.array.operate_options);
+                }
+                return btn_titles;
+            }
+        },error->{
+            Context context= QcApplication.getContext();
+            btn_titles = context.getResources().getStringArray(R.array.operate_options);
+            initArrays();
+        });
     }
 }

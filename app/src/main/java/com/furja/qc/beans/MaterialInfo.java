@@ -1,6 +1,8 @@
 package com.furja.qc.beans;
 
 
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.text.TextUtils;
 
 import com.alibaba.fastjson.JSON;
@@ -18,7 +20,7 @@ import java.util.List;
  * 物料信息用于保存物料代码,物料内码、名称及规格等信息
  */
 
-public class MaterialInfo {
+public class MaterialInfo implements Parcelable {
     private String materialId;
     private String materialName;
     private String norm;
@@ -102,5 +104,39 @@ public class MaterialInfo {
     public void setMaterialISN(String materialISN) {
         this.materialISN = materialISN;
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(this.materialId);
+        dest.writeString(this.materialName);
+        dest.writeString(this.norm);
+        dest.writeString(this.materialISN);
+        dest.writeStringList(this.urls);
+    }
+
+    protected MaterialInfo(Parcel in) {
+        this.materialId = in.readString();
+        this.materialName = in.readString();
+        this.norm = in.readString();
+        this.materialISN = in.readString();
+        this.urls = in.createStringArrayList();
+    }
+
+    public static final Parcelable.Creator<MaterialInfo> CREATOR = new Parcelable.Creator<MaterialInfo>() {
+        @Override
+        public MaterialInfo createFromParcel(Parcel source) {
+            return new MaterialInfo(source);
+        }
+
+        @Override
+        public MaterialInfo[] newArray(int size) {
+            return new MaterialInfo[size];
+        }
+    };
 }
 

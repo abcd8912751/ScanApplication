@@ -15,7 +15,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/edit_dimen"
         />
-    <androidx.appcompat.widget.AppCompatEditText
+    <com.furja.qc.view.CleanableEditText
         android:id="@+id/edit_dimen"
         android:inputType="numberDecimal"
         android:layout_width="0dp"
@@ -23,6 +23,7 @@
         android:layout_marginBottom="@dimen/dp_1"
         android:background="@drawable/shape_input_box"
         android:layout_marginEnd="@dimen/dp_6"
+        android:drawableEnd="@mipmap/nim_icon_edit_transparent"
         app:layout_constraintHorizontal_weight="3"
         app:layout_constraintTop_toTopOf="@+id/label_check"
         app:layout_constraintBottom_toBottomOf="@+id/label_check"

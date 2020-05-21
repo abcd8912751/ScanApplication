@@ -21,7 +21,7 @@ import com.furja.qc.R;
 import com.furja.qc.QcApplication;
 import com.furja.qc.beans.User;
 import com.furja.qc.utils.LoginUtils;
-import com.furja.qc.view.ClearableEditTextWithIcon;
+import com.furja.qc.view.CleanableEditText;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -38,9 +38,9 @@ import static com.furja.qc.utils.Utils.showToast;
 
 public class LoginActivity extends AppCompatActivity {
     @BindView(R.id.edit_login_operator)
-    ClearableEditTextWithIcon operatorEdit;
+    CleanableEditText operatorEdit;
     @BindView(R.id.edit_login_password)
-    ClearableEditTextWithIcon passwordEdit;
+    CleanableEditText passwordEdit;
     @BindView(R.id.login_startLoginBtn)
     Button startLoginBtn;
     @BindView(R.id.auto_login_checked)

@@ -9,8 +9,8 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import androidx.core.widget.NestedScrollView;
-import androidx.appcompat.widget.AppCompatEditText;
 import androidx.appcompat.widget.AppCompatTextView;
+import androidx.lifecycle.LifecycleOwner;
 import androidx.recyclerview.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.TypedValue;
@@ -36,7 +36,7 @@ import com.furja.qc.utils.SharpBus;
 import com.furja.qc.utils.TextInputListener;
 import com.furja.qc.utils.Utils;
 import com.furja.qc.view.AutoCapTransitionMethod;
-import com.furja.qc.view.ClearableEditTextWithIcon;
+import com.furja.qc.view.CleanableEditText;
 import com.furja.qc.view.DatePickerWheel;
 import com.furja.qc.view.DimenGroupAdapter;
 import com.furja.qc.view.WheelView;
@@ -60,6 +60,7 @@ import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 
 import static android.view.KeyEvent.KEYCODE_F7;
+import static com.furja.qc.utils.Constants.EXTRA_COMMONINFO;
 import static com.furja.qc.utils.Constants.INTERNET_ABNORMAL;
 import static com.furja.qc.utils.Constants.NODATA_AVAILABLE;
 import static com.furja.qc.utils.Constants.TAG_GOT_DIMENLOG;
@@ -70,7 +71,7 @@ import static com.furja.qc.utils.Utils.showToast;
 
 public class DimenLogActivity extends BaseActivity implements InjectionLogContract.View {
     @BindView(R.id.edit_barCode)
-    AppCompatEditText editBarCode;
+    CleanableEditText editBarCode;
     @BindView(R.id.text_materialName)
     TextView textMaterialName;
     @BindView(R.id.text_materialModel)
@@ -80,7 +81,7 @@ public class DimenLogActivity extends BaseActivity implements InjectionLogContra
     @BindView(R.id.edit_moldCavity)
     MaterialSpinner editMoldCavity;
     @BindView(R.id.edit_workplace)
-    ClearableEditTextWithIcon editWorkplace;
+    CleanableEditText editWorkplace;
     @BindView(R.id.edit_moldNo)
     MaterialSpinner editMoldNo;
     @BindView(R.id.materialInfo)
@@ -118,13 +119,11 @@ public class DimenLogActivity extends BaseActivity implements InjectionLogContra
      * 解析Intent
      */
     private void analyseIntent() {
-        Intent intent=getIntent();
-        if (intent !=null) {
-            String extraString = intent.getDataString();
-            if (!TextUtils.isEmpty(extraString)) {
+        Intent intent = getIntent();
+        if (intent != null) {
+            CommonInfoBundle bundle = intent.getParcelableExtra(EXTRA_COMMONINFO);
+            if (bundle != null) {
                 try {
-                    CommonInfoBundle bundle
-                            = JSON.parseObject(extraString,CommonInfoBundle.class);
                     showMaterialInfo(bundle.getMaterialInfo());
                     List<String> stringItems = editMoldNo.getItems();
                     editMoldNo.setSelectedIndex(stringItems.indexOf(bundle.getMoldNo()));
@@ -337,8 +336,9 @@ public class DimenLogActivity extends BaseActivity implements InjectionLogContra
                 Observable.just(footView.getTop())
                         .delay(200,TimeUnit.MILLISECONDS)
                         .observeOn(AndroidSchedulers.mainThread())
+                        .as(AutoDispose.autoDisposable(AndroidLifecycleScopeProvider.from(this)))
                         .subscribe(top->{
-                            nestedScroll.smoothScrollTo(0,top);
+                            nestedScroll.smoothScrollTo(0, top);
                         });
                 break;
             case R.id.spinner_class:
@@ -413,6 +413,11 @@ public class DimenLogActivity extends BaseActivity implements InjectionLogContra
 
     @Override
     public Context getContext() {
+        return this;
+    }
+
+    @Override
+    public LifecycleOwner getLifeCycle() {
         return this;
     }
 

@@ -53,7 +53,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/label_numberOfDefective"
         />
-    <com.furja.qc.view.ClearableEditTextWithIcon
+    <com.furja.qc.view.CleanableEditText
         android:id="@+id/edit_sampleSize"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

@@ -1,6 +1,9 @@
 package com.furja.qc.contract;
 
 import android.content.Context;
+
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.furja.qc.beans.MaterialInfo;
@@ -28,6 +31,7 @@ public interface InjectionLogContract {
         default void setButtonClickListener(android.view.View.OnClickListener buttonClickListener){};
         default void onBackPressed(){};
         Context getContext();
+        LifecycleOwner getLifeCycle();
     }
 
     interface Presenter {

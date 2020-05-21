@@ -45,7 +45,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/text_inter"
             >
-            <com.google.android.material.textfield.TextInputEditText
+            <com.furja.qc.view.CleanableEditText
                 android:id="@+id/edit_standardDimen"
                 android:inputType="numberDecimal"
                 android:gravity="end"
@@ -53,6 +53,7 @@
                 android:nextFocusDown="@+id/edit_upperOffset"
                 android:layout_marginStart="@dimen/dp_4"
                 android:paddingEnd="@dimen/dp_2"
+                android:drawableEnd="@mipmap/nim_icon_edit_transparent"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -69,7 +70,7 @@
             app:layout_constraintEnd_toStartOf="@+id/edit_upperOffset"
             app:layout_constraintStart_toEndOf="@+id/input_standardDimen"
             />
-        <androidx.appcompat.widget.AppCompatEditText
+        <com.furja.qc.view.CleanableEditText
             android:id="@+id/edit_upperOffset"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -78,6 +79,7 @@
             android:drawableStart="@mipmap/ic_upper_left"
             android:nextFocusDown="@+id/edit_lowerOffset"
             android:hint="@string/hint_upperOffset"
+            android:drawableEnd="@mipmap/nim_icon_edit_transparent"
             android:layout_marginTop="@dimen/sp_12"
             app:layout_constraintHorizontal_weight="1"
             app:layout_constraintTop_toTopOf="@+id/input_upperLimit"
@@ -85,7 +87,7 @@
             app:layout_constraintStart_toEndOf="@+id/text_inter"
             app:layout_constraintEnd_toStartOf="@+id/img_bridge"
             />
-        <androidx.appcompat.widget.AppCompatEditText
+        <com.furja.qc.view.CleanableEditText
             android:id="@+id/edit_lowerOffset"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -94,6 +96,7 @@
             android:drawableStart="@mipmap/ic_lower_left"
             android:hint="@string/hint_lowerOffset"
             android:nextFocusDown="@+id/edit_upperLimit"
+            android:drawableEnd="@mipmap/nim_icon_edit_transparent"
             app:layout_constraintHorizontal_weight="1"
             app:layout_constraintTop_toBottomOf="@+id/edit_upperOffset"
             app:layout_constraintStart_toStartOf="@+id/edit_upperOffset"
@@ -124,11 +127,12 @@
             app:layout_constraintStart_toEndOf="@+id/img_bridge"
             app:layout_constraintEnd_toEndOf="parent"
             >
-            <com.google.android.material.textfield.TextInputEditText
+            <com.furja.qc.view.CleanableEditText
                 android:id="@+id/edit_upperLimit"
                 android:inputType="numberDecimal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:drawableEnd="@mipmap/nim_icon_edit_transparent"
                 android:nextFocusDown="@+id/edit_lowerLimit"
                 />
         </com.google.android.material.textfield.TextInputLayout>
@@ -143,9 +147,10 @@
             app:layout_constraintTop_toBottomOf="@+id/input_upperLimit"
             app:layout_constraintStart_toStartOf="@+id/input_upperLimit"
             app:layout_constraintEnd_toEndOf="parent">
-            <com.google.android.material.textfield.TextInputEditText
+            <com.furja.qc.view.CleanableEditText
                 android:id="@+id/edit_lowerLimit"
                 android:inputType="numberDecimal"
+                android:drawableEnd="@mipmap/nim_icon_edit_transparent"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -162,7 +167,6 @@
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/input_lowerLimit"
-
             />
 
         <androidx.appcompat.widget.AppCompatTextView
